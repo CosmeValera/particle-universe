@@ -1,0 +1,241 @@
+---
+---
+
+<div class="metrics-container">
+  <div class="framework-badge badge-angular">
+    <svg width="12" height="12" viewBox="0 0 256 272">
+      <path fill="#DD0031" d="M.1 45.522L125.908.697l129.196 44.028l-20.919 166.45l-108.277 59.966l-106.583-59.169z"/>
+      <path fill="#C3002F" d="M255.104 44.725L125.908.697v270.444l108.277-59.866z"/>
+      <path fill="#FFF" d="M125.908 32.432L63.597 169.081l23.264.001l12.56-31.372h52.988l12.56 31.371h23.264zm.001 55.488l18.159 44.34h-36.318z"/>
+    </svg>
+    Metrics
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card" id="stat-fps">
+      <span class="stat-value" id="fps-value">0</span>
+      <span class="stat-label">FPS</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" id="particle-count">0</span>
+      <span class="stat-label">Particles</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" id="avg-velocity">0</span>
+      <span class="stat-label">Avg Velocity</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" id="energy-value">0</span>
+      <span class="stat-label">Energy</span>
+    </div>
+  </div>
+
+  <div class="chart-section">
+    <span class="chart-title">FPS History</span>
+    <canvas id="fps-chart" class="sparkline-canvas"></canvas>
+  </div>
+
+  <div class="chart-section">
+    <span class="chart-title">Energy History</span>
+    <canvas id="energy-chart" class="sparkline-canvas"></canvas>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span class="status-text" id="status-text">Initializing...</span>
+  </div>
+</div>
+
+<script>
+  import { $particleMetrics } from '../stores/store';
+
+  function drawSparkline(
+    canvas: HTMLCanvasElement,
+    data: number[],
+    color: string,
+    minVal?: number,
+    maxVal?: number,
+  ) {
+    if (data.length < 2) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+    const w = rect.width;
+    const h = rect.height;
+    const padding = 2;
+
+    ctx.clearRect(0, 0, w, h);
+
+    const min = minVal ?? Math.min(...data);
+    const max = maxVal ?? Math.max(...data);
+    const range = max - min || 1;
+
+    // Filled area
+    ctx.beginPath();
+    ctx.moveTo(padding, h - padding);
+    for (let i = 0; i < data.length; i++) {
+      const x = padding + (i / (data.length - 1)) * (w - 2 * padding);
+      const y = h - padding - ((data[i] - min) / range) * (h - 2 * padding);
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w - padding, h - padding);
+    ctx.closePath();
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, h);
+    gradient.addColorStop(0, color + '30');
+    gradient.addColorStop(1, color + '05');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Line
+    ctx.beginPath();
+    for (let i = 0; i < data.length; i++) {
+      const x = padding + (i / (data.length - 1)) * (w - 2 * padding);
+      const y = h - padding - ((data[i] - min) / range) * (h - 2 * padding);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  function formatEnergy(energy: number): string {
+    if (energy > 10000) return (energy / 1000).toFixed(1) + 'k';
+    return energy.toString();
+  }
+
+  const fpsValue = document.getElementById('fps-value')!;
+  const particleCount = document.getElementById('particle-count')!;
+  const avgVelocity = document.getElementById('avg-velocity')!;
+  const energyValue = document.getElementById('energy-value')!;
+  const fpsChart = document.getElementById('fps-chart') as HTMLCanvasElement;
+  const energyChart = document.getElementById('energy-chart') as HTMLCanvasElement;
+  const statFps = document.getElementById('stat-fps')!;
+  const statusDot = document.getElementById('status-dot')!;
+  const statusText = document.getElementById('status-text')!;
+
+  $particleMetrics.subscribe((m) => {
+    fpsValue.textContent = String(m.fps);
+    particleCount.textContent = String(m.particleCount);
+    avgVelocity.textContent = String(m.avgVelocity);
+    energyValue.textContent = formatEnergy(m.energy);
+
+    // FPS color
+    const fpsColor = m.fps >= 55 ? '#22c55e' : m.fps >= 30 ? '#f59e0b' : '#ef4444';
+    fpsValue.style.color = fpsColor;
+
+    // Highlight card
+    statFps.classList.toggle('highlight', m.fps >= 55);
+
+    // Status
+    statusDot.style.background = fpsColor;
+    statusText.textContent =
+      m.fps >= 55 ? 'System running optimally' :
+      m.fps >= 30 ? 'Performance degraded' :
+      'Low performance — reduce particles';
+
+    // Sparklines
+    drawSparkline(fpsChart, m.fpsHistory, '#dd0031', 0, 80);
+    drawSparkline(energyChart, m.energyHistory, '#ff6f61');
+  });
+</script>
+
+<style>
+  .metrics-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .stat-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: all 0.3s;
+  }
+
+  .stat-card.highlight {
+    border-color: rgba(34, 197, 94, 0.3);
+    background: rgba(34, 197, 94, 0.05);
+  }
+
+  .stat-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #e0e0ff;
+    font-family: 'Courier New', monospace;
+  }
+
+  .stat-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #8888aa;
+  }
+
+  .chart-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .chart-title {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8888aa;
+  }
+
+  .sparkline-canvas {
+    width: 100%;
+    height: 40px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    margin-top: auto;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #8888aa;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .status-text {
+    font-size: 0.7rem;
+    color: #8888aa;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+</style>

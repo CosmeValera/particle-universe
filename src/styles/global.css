@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-panel: #1a1a2e;
+  --bg-panel-hover: #1f1f35;
+  --border-color: #2a2a4a;
+  --text-primary: #e0e0ff;
+  --text-secondary: #8888aa;
+  --accent-vue: #42b883;
+  --accent-react: #61dafb;
+  --accent-angular: #dd0031;
+  --accent-glow: rgba(100, 100, 255, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+/* Panel base styles */
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 12px 12px 0 0;
+}
+
+.panel-vue::before {
+  background: linear-gradient(90deg, var(--accent-vue), transparent);
+}
+
+.panel-react::before {
+  background: linear-gradient(90deg, var(--accent-react), transparent);
+}
+
+.panel-angular::before {
+  background: linear-gradient(90deg, var(--accent-angular), transparent);
+}
+
+/* Framework badge */
+.framework-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+}
+
+.badge-vue {
+  color: var(--accent-vue);
+  background: rgba(66, 184, 131, 0.1);
+  border: 1px solid rgba(66, 184, 131, 0.25);
+}
+
+.badge-react {
+  color: var(--accent-react);
+  background: rgba(97, 218, 251, 0.1);
+  border: 1px solid rgba(97, 218, 251, 0.25);
+}
+
+.badge-angular {
+  color: var(--accent-angular);
+  background: rgba(221, 0, 49, 0.1);
+  border: 1px solid rgba(221, 0, 49, 0.25);
+}
+
+/* Slider styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-color);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-vue);
+  cursor: pointer;
+  border: 2px solid var(--bg-panel);
+  box-shadow: 0 0 8px rgba(66, 184, 131, 0.4);
+}
+
+/* Glow effect for canvas */
+.canvas-glow {
+  box-shadow: inset 0 0 60px rgba(100, 100, 255, 0.05),
+              0 0 30px rgba(100, 100, 255, 0.03);
+}

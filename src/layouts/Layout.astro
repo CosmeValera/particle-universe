@@ -1,0 +1,110 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Particle Universe - A multi-framework dashboard showcasing Vue, React, and Angular working together" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <span class="logo-icon">✦</span>
+          <span class="logo-text">Particle Universe</span>
+        </div>
+        <nav class="nav-badges">
+          <span class="framework-badge badge-vue">
+            <svg width="12" height="12" viewBox="0 0 256 221"><path fill="#41B883" d="M204.8 0H256L128 220.8L0 0h97.92L128 51.2L157.44 0z"/><path fill="#41B883" d="M0 0l128 220.8L256 0h-51.2L128 132.48L50.56 0z"/><path fill="#35495E" d="M50.56 0L128 133.12L204.8 0h-47.36L128 51.2L97.92 0z"/></svg>
+            Vue
+          </span>
+          <span class="framework-badge badge-react">
+            <svg width="12" height="12" viewBox="0 0 256 228"><circle cx="128" cy="114" r="20" fill="#61DAFB"/><ellipse cx="128" cy="114" rx="115" ry="44" fill="none" stroke="#61DAFB" stroke-width="8"/><ellipse cx="128" cy="114" rx="115" ry="44" fill="none" stroke="#61DAFB" stroke-width="8" transform="rotate(60 128 114)"/><ellipse cx="128" cy="114" rx="115" ry="44" fill="none" stroke="#61DAFB" stroke-width="8" transform="rotate(120 128 114)"/></svg>
+            React
+          </span>
+          <span class="framework-badge badge-angular">
+            <svg width="12" height="12" viewBox="0 0 256 272"><path fill="#DD0031" d="M.1 45.522L125.908.697l129.196 44.028l-20.919 166.45l-108.277 59.966l-106.583-59.169z"/><path fill="#C3002F" d="M255.104 44.725L125.908.697v270.444l108.277-59.866z"/><path fill="#FFF" d="M125.908 32.432L63.597 169.081l23.264.001l12.56-31.372h52.988l12.56 31.371h23.264zm.001 55.488l18.159 44.34h-36.318z"/></svg>
+            Angular
+          </span>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <slot />
+    </main>
+
+    <style>
+      .header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: rgba(10, 10, 15, 0.85);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border-color);
+        padding: 0.75rem 1.5rem;
+      }
+
+      .header-inner {
+        max-width: 1440px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+
+      .logo-icon {
+        font-size: 1.4rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: pulse-glow 3s ease-in-out infinite;
+      }
+
+      .logo-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        color: var(--text-primary);
+      }
+
+      .nav-badges {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .main-content {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 1.25rem;
+      }
+
+      @keyframes pulse-glow {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+      }
+
+      @media (max-width: 768px) {
+        .nav-badges {
+          display: none;
+        }
+      }
+    </style>
+  </body>
+</html>
