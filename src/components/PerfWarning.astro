@@ -15,6 +15,13 @@
   </div>
 </div>
 
+<!-- Toast notification for auto-reduce -->
+<div id="perf-toast" class="perf-toast" hidden>
+  <span id="perf-toast-icon" class="perf-toast-icon">&#9888;</span>
+  <span id="perf-toast-text" class="perf-toast-text"></span>
+  <button id="perf-toast-close" class="perf-toast-close" aria-label="Dismiss">&times;</button>
+</div>
+
 <script>
   import {
     $particleMetrics,
@@ -32,11 +39,53 @@
 
   const AUTO_REDUCE_FPS_THRESHOLD = 45;
   const CRITICAL_FPS_THRESHOLD = 30;
-  const AUTO_ENABLE_DELAY = 2000; // ms of sustained critical FPS before auto-enabling
+  const REDUCE_COOLDOWN = 2000; // ms between reduction steps
+  const RECOVER_COOLDOWN = 3000; // ms between recovery steps
+  const RECOVER_FPS_THRESHOLD = 55; // FPS must be above this to recover
+  const REDUCE_FACTOR = 0.85; // keep 85% each step (gentle 15% reduction)
+  const RECOVER_FACTOR = 1.10; // recover 10% each step
+  const SUGGEST_DELAY = 4000; // ms of sustained low FPS before suggesting auto-reduce
 
   let lastSeenFps = -1;
   let popupOpen = false;
-  let criticalSince: number | null = null; // timestamp when FPS first dropped below critical
+  let lastReduceTime = 0;
+  let lastRecoverTime = 0;
+  let originalCount: number | null = null; // remember count before reductions started
+  let lowFpsSince: number | null = null; // for toast suggestion
+  let toastShownThisSession = false;
+  let toastTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  // Toast elements
+  const toast = document.getElementById('perf-toast')!;
+  const toastText = document.getElementById('perf-toast-text')!;
+  const toastIcon = document.getElementById('perf-toast-icon')!;
+  const toastClose = document.getElementById('perf-toast-close')!;
+
+  function showToast(message: string, icon = '\u26A0', duration = 5000) {
+    toastText.textContent = message;
+    toastIcon.textContent = icon;
+    toast.hidden = false;
+    requestAnimationFrame(() => toast.classList.add('visible'));
+
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(hideToast, duration);
+  }
+
+  function hideToast() {
+    toast.classList.remove('visible');
+    if (toastTimeout) { clearTimeout(toastTimeout); toastTimeout = null; }
+    setTimeout(() => { toast.hidden = true; }, 300);
+  }
+
+  toastClose.addEventListener('click', hideToast);
+
+  function getMinFloor() {
+    // Floor is 20% of original count, but at least 100
+    if (originalCount !== null) {
+      return Math.max(100, Math.round(originalCount * 0.2));
+    }
+    return 100;
+  }
 
   function updatePopupContent(fps: number) {
     popupFps.textContent = String(fps);
@@ -93,24 +142,60 @@
     if (popupOpen && m.fps !== lastSeenFps) updatePopupContent(m.fps);
     lastSeenFps = m.fps;
 
-    // Auto-enable auto-reduce after sustained critical FPS
-    if (!$autoReduceParticles.get() && !$isPaused.get() && m.fps < CRITICAL_FPS_THRESHOLD) {
-      if (criticalSince === null) {
-        criticalSince = Date.now();
-      } else if (Date.now() - criticalSince >= AUTO_ENABLE_DELAY) {
-        $autoReduceParticles.set(true);
-        criticalSince = null;
+    const now = Date.now();
+    const isPaused = $isPaused.get();
+    const autoReduceOn = $autoReduceParticles.get();
+
+    // Suggest auto-reduce via toast (don't auto-enable it)
+    if (!autoReduceOn && !isPaused && m.fps < CRITICAL_FPS_THRESHOLD) {
+      if (lowFpsSince === null) {
+        lowFpsSince = now;
+      } else if (!toastShownThisSession && now - lowFpsSince >= SUGGEST_DELAY) {
+        showToast('Performance is low. Try enabling auto-adjust in the Metrics panel.', '\u26A0', 6000);
+        toastShownThisSession = true;
       }
     } else if (m.fps >= CRITICAL_FPS_THRESHOLD) {
-      criticalSince = null;
+      lowFpsSince = null;
     }
 
-    // Auto-reduce silently if enabled
-    if ($autoReduceParticles.get() && m.fps < AUTO_REDUCE_FPS_THRESHOLD && !$isPaused.get()) {
+    // Gradual reduction with cooldown
+    if (autoReduceOn && m.fps < AUTO_REDUCE_FPS_THRESHOLD && !isPaused) {
       const current = $particleConfig.get().count;
-      if (current > 50) {
-        $particleConfig.setKey('count', Math.max(50, Math.round(current * 0.8)));
+      const floor = getMinFloor();
+
+      // Remember original count when reductions start
+      if (originalCount === null) {
+        originalCount = current;
       }
+
+      if (current > floor && now - lastReduceTime >= REDUCE_COOLDOWN) {
+        const newCount = Math.max(floor, Math.round(current * REDUCE_FACTOR));
+        if (newCount < current) {
+          $particleConfig.setKey('count', newCount);
+          lastReduceTime = now;
+        }
+      }
+    }
+
+    // Gradual recovery: when FPS is good, step particles back up toward original
+    if (autoReduceOn && m.fps >= RECOVER_FPS_THRESHOLD && !isPaused && originalCount !== null) {
+      const current = $particleConfig.get().count;
+      if (current < originalCount && now - lastRecoverTime >= RECOVER_COOLDOWN) {
+        const newCount = Math.min(originalCount, Math.round(current * RECOVER_FACTOR));
+        if (newCount > current) {
+          $particleConfig.setKey('count', newCount);
+          lastRecoverTime = now;
+          // Reset reduce timer so we don't immediately reduce what we just recovered
+          lastReduceTime = now;
+        }
+      }
+    }
+  });
+
+  // Reset original count tracking when auto-reduce is toggled off
+  $autoReduceParticles.subscribe((on) => {
+    if (!on) {
+      originalCount = null;
     }
   });
 </script>
@@ -193,5 +278,59 @@
     color: var(--text-secondary);
     line-height: 1.5;
     margin: 0;
+  }
+
+  /* --- Toast notification --- */
+  .perf-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    max-width: 420px;
+  }
+
+  .perf-toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .perf-toast-icon {
+    font-size: 1rem;
+    color: #f59e0b;
+    flex-shrink: 0;
+  }
+
+  .perf-toast-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  .perf-toast-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0 2px;
+    margin-left: 0.25rem;
+    flex-shrink: 0;
+    border-radius: 4px;
+    transition: color 0.15s;
+  }
+
+  .perf-toast-close:hover {
+    color: var(--text-primary);
   }
 </style>

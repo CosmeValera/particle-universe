@@ -28,30 +28,12 @@ export interface ParticleMetrics {
   fpsHistory: number[];
 }
 
-export const DEFAULT_CONFIG: ParticleConfig = {
-  gravity: 0.02,
-  gravityDirection: 'down',
-  speed: 1.5,
-  count: 500,
-  size: 2,
-  color: '#a78bfa',
-  shape: 'circle',
-  attraction: 0.8,
-  friction: 0.995,
-  trail: 0.05,
-  colorMode: 'solid',
-  boundary: 'wrap',
-  collision: false,
-  immortal: true,
-  bounciness: 1,
-};
-
 export const PRESETS: Record<string, Partial<ParticleConfig>> = {
   default: {
     gravity: 0.02,
     gravityDirection: 'down',
     speed: 1.5,
-    count: 500,
+    count: 300,
     size: 2,
     color: '#a78bfa',
     shape: 'circle',
@@ -68,7 +50,7 @@ export const PRESETS: Record<string, Partial<ParticleConfig>> = {
     gravity: 0.05,
     gravityDirection: 'down',
     speed: 1,
-    count: 350,
+    count: 250,
     size: 3,
     color: '#e0e0ff',
     shape: 'circle',
@@ -136,7 +118,7 @@ export const PRESETS: Record<string, Partial<ParticleConfig>> = {
     gravity: 0.01,
     gravityDirection: 'down',
     speed: 0.8,
-    count: 600,
+    count: 400,
     size: 4,
     color: '#ec4899',
     shape: 'circle',
@@ -150,6 +132,9 @@ export const PRESETS: Record<string, Partial<ParticleConfig>> = {
     bounciness: 1,
   }
 };
+
+export const DEFAULT_CONFIG: ParticleConfig = PRESETS.default;
+
 
 export const $particleConfig = map<ParticleConfig>({ ...DEFAULT_CONFIG });
 export const $particleMetrics = map<ParticleMetrics>({

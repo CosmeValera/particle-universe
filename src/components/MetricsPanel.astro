@@ -38,8 +38,8 @@
   </div>
 
   <div class="auto-reduce-bar">
-    <span class="auto-reduce-label">Auto-reduce</span>
-    <button id="auto-reduce-toggle" class="auto-reduce-toggle" aria-label="Toggle auto-reduce particles" title="Gradually reduces particles when FPS drops below 45">
+    <span class="auto-reduce-label">Auto-adjust particles</span>
+    <button id="auto-reduce-toggle" class="auto-reduce-toggle" aria-label="Toggle auto-adjust particles" title="Automatically adjusts particle count to maintain smooth performance">
       <span class="auto-reduce-knob"></span>
     </button>
   </div>
@@ -203,11 +203,11 @@
     statusDot.style.background = fpsColor;
     const autoReduce = $autoReduceParticles.get();
     if (m.fps >= 55) {
-      statusText.textContent = autoReduce ? 'Running optimally — auto-reduce on' : 'System running optimally';
+      statusText.textContent = autoReduce ? 'Stable — auto-adjust active' : 'System running optimally';
     } else if (m.fps >= 30) {
-      statusText.textContent = autoReduce ? 'Auto-reducing particles...' : 'Performance degraded';
+      statusText.textContent = autoReduce ? 'Adjusting particles for smooth FPS...' : 'Performance could be better';
     } else {
-      statusText.textContent = autoReduce ? 'Auto-reducing particles...' : 'Low performance — enable auto-reduce';
+      statusText.textContent = autoReduce ? 'Optimizing particle count...' : 'Low FPS detected';
     }
 
     // Sparkline
@@ -361,6 +361,7 @@
   .auto-reduce-toggle {
     position: relative;
     width: 36px;
+    min-width: 36px;
     height: 20px;
     border-radius: 10px;
     border: none;

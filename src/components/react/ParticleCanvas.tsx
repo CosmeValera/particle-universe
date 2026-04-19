@@ -412,7 +412,7 @@ export default function ParticleCanvas() {
 
   const handleReduceParticles = () => {
     const current = $particleConfig.get().count;
-    $particleConfig.setKey('count', Math.max(50, Math.round(current * 0.5)));
+    $particleConfig.setKey('count', Math.max(100, Math.round(current * 0.5)));
     if ($isPaused.get()) togglePause();
   };
 
