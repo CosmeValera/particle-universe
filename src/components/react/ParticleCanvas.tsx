@@ -46,6 +46,18 @@ function getCanvasBgRgb(): string {
     .trim() || '10, 10, 15';
 }
 
+function isLightMode(): boolean {
+  return document.documentElement.getAttribute('data-theme') === 'light';
+}
+
+function darkenRgb(r: number, g: number, b: number, factor: number): [number, number, number] {
+  return [
+    Math.round(r * factor),
+    Math.round(g * factor),
+    Math.round(b * factor),
+  ];
+}
+
 function drawShape(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -188,7 +200,8 @@ export default function ParticleCanvas() {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const particles = particlesRef.current;
-      const [r, g, b] = hexToRgb(cfg.color);
+      const rawRgb = hexToRgb(cfg.color);
+      const [r, g, b] = isLightMode() ? darkenRgb(...rawRgb, 0.55) : rawRgb;
       const mouse = mouseRef.current;
 
       // Adjust particle count
