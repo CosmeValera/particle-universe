@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import ControlPanel from '../components/vue/ControlPanel.vue';
 import ParticleCanvas from '../components/react/ParticleCanvas';
 import MetricsPanel from '../components/MetricsPanel.astro';
+import PerfWarning from '../components/PerfWarning.astro';
 import '../styles/global.css';
 ---
 
@@ -48,6 +49,8 @@ import '../styles/global.css';
       — State shared via <span class="footer-tech">nanostores</span>
     </p>
   </footer>
+
+  <PerfWarning />
 </Layout>
 
 <style>

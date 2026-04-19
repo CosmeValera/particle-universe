@@ -5,6 +5,8 @@ import {
   $particleMetrics,
   $isPaused,
   $resetTrigger,
+  togglePause,
+  randomize,
   type ParticleConfig,
 } from '../../stores/store';
 
@@ -36,6 +38,12 @@ function hexToRgb(hex: string): [number, number, number] {
   return result
     ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
     : [102, 126, 234];
+}
+
+function getCanvasBgRgb(): string {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue('--canvas-bg-rgb')
+    .trim() || '10, 10, 15';
 }
 
 function drawShape(
@@ -82,18 +90,43 @@ function drawShape(
   }
 }
 
+const quickBtnStyle: React.CSSProperties = {
+  padding: '7px 14px',
+  fontSize: '0.72rem',
+  fontWeight: 500,
+  fontFamily: 'inherit',
+  color: 'var(--text-secondary)',
+  background: 'var(--surface-overlay)',
+  border: '1px solid var(--border-color)',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  transition: 'all 0.15s',
+};
+
 export default function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const mouseRef = useRef({ x: -1000, y: -1000, active: false });
   const animRef = useRef<number>(0);
   const fpsRef = useRef({ frames: 0, lastTime: performance.now(), current: 0 });
+  const lastRealFpsRef = useRef(0);
 
   const config = useStore($particleConfig);
   const isPaused = useStore($isPaused);
   const resetTrigger = useStore($resetTrigger);
+  const metrics = useStore($particleMetrics);
   const configRef = useRef(config);
   configRef.current = config;
+
+  // Track the last real FPS before pausing
+  useEffect(() => {
+    if (!isPaused && metrics.fps > 0) {
+      lastRealFpsRef.current = metrics.fps;
+    }
+  }, [isPaused, metrics.fps]);
+
+  const lastFps = isPaused ? lastRealFpsRef.current : metrics.fps;
+  const wasLowFps = lastFps > 0 && lastFps < 30;
 
   const initParticles = useCallback(() => {
     const canvas = canvasRef.current;
@@ -149,8 +182,9 @@ export default function ParticleCanvas() {
         fpsRef.current.lastTime = now;
       }
 
-      // Trail effect
-      ctx.fillStyle = `rgba(10, 10, 15, ${1 - cfg.trail})`;
+      // Trail effect — reads CSS variable for theme-aware background
+      const bgRgb = getCanvasBgRgb();
+      ctx.fillStyle = `rgba(${bgRgb}, ${1 - cfg.trail})`;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const particles = particlesRef.current;
@@ -275,6 +309,19 @@ export default function ParticleCanvas() {
     mouseRef.current.y = -1000;
   }, []);
 
+  const handleReduceParticles = () => {
+    const current = $particleConfig.get().count;
+    $particleConfig.setKey('count', Math.max(50, Math.round(current * 0.5)));
+  };
+
+  const handleLowerGravity = () => {
+    $particleConfig.setKey('gravity', 0.02);
+  };
+
+  const handleTryRandom = () => {
+    randomize();
+  };
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <canvas
@@ -295,18 +342,138 @@ export default function ParticleCanvas() {
         <div
           style={{
             position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            fontSize: '1.5rem',
-            fontWeight: 600,
-            color: 'rgba(255,255,255,0.4)',
-            letterSpacing: '0.2em',
-            textTransform: 'uppercase',
-            pointerEvents: 'none',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: `rgba(var(--canvas-bg-rgb), 0.55)`,
+            borderRadius: '8px',
+            gap: '0.9rem',
           }}
         >
-          Paused
+          <div
+            style={{
+              fontSize: '1.4rem',
+              fontWeight: 700,
+              color: 'var(--text-secondary)',
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+            }}
+          >
+            Paused
+          </div>
+
+          {wasLowFps && (
+            <div
+              style={{
+                fontSize: '0.78rem',
+                color: '#f59e0b',
+                fontFamily: "'Courier New', monospace",
+                fontWeight: 600,
+              }}
+            >
+              Last FPS: {lastFps}
+            </div>
+          )}
+
+          <button
+            onClick={() => togglePause()}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              padding: '12px 32px',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              fontFamily: 'inherit',
+              color: 'var(--text-primary)',
+              background: 'rgba(102, 126, 234, 0.2)',
+              border: '1px solid rgba(102, 126, 234, 0.4)',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              letterSpacing: '0.05em',
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(102, 126, 234, 0.35)';
+              e.currentTarget.style.borderColor = 'rgba(102, 126, 234, 0.6)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(102, 126, 234, 0.2)';
+              e.currentTarget.style.borderColor = 'rgba(102, 126, 234, 0.4)';
+            }}
+          >
+            &#9654; Resume
+          </button>
+
+          {wasLowFps && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginTop: '0.25rem',
+              }}
+            >
+              <p
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'var(--text-secondary)',
+                  opacity: 0.7,
+                  margin: 0,
+                }}
+              >
+                Try one of these before resuming:
+              </p>
+              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button
+                  onClick={handleReduceParticles}
+                  style={quickBtnStyle}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'var(--surface-overlay-hover)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'var(--surface-overlay)';
+                    e.currentTarget.style.color = 'var(--text-secondary)';
+                  }}
+                >
+                  Halve Particles
+                </button>
+                <button
+                  onClick={handleLowerGravity}
+                  style={quickBtnStyle}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'var(--surface-overlay-hover)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'var(--surface-overlay)';
+                    e.currentTarget.style.color = 'var(--text-secondary)';
+                  }}
+                >
+                  Lower Gravity
+                </button>
+                <button
+                  onClick={handleTryRandom}
+                  style={quickBtnStyle}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'var(--surface-overlay-hover)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'var(--surface-overlay)';
+                    e.currentTarget.style.color = 'var(--text-secondary)';
+                  }}
+                >
+                  Try Random
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

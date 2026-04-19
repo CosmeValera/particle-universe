@@ -204,7 +204,7 @@ function handleRandomize() {
   padding: 5px 4px;
   font-size: 0.65rem;
   text-transform: capitalize;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-overlay);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
   border-radius: 6px;
@@ -268,8 +268,8 @@ function handleRandomize() {
 }
 
 .color-swatch.active {
-  border-color: white;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+  border-color: var(--text-primary);
+  box-shadow: 0 0 8px var(--surface-overlay-hover);
 }
 
 .shape-grid {
@@ -281,7 +281,7 @@ function handleRandomize() {
 .shape-btn {
   padding: 6px;
   font-size: 1rem;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-overlay);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
   border-radius: 6px;
@@ -311,7 +311,7 @@ function handleRandomize() {
   padding: 8px 6px;
   font-size: 0.72rem;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-overlay);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
   border-radius: 8px;
@@ -320,7 +320,7 @@ function handleRandomize() {
 }
 
 .action-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-overlay-hover);
 }
 
 .action-btn.accent {

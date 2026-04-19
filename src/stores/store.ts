@@ -104,6 +104,22 @@ export const $isPaused = atom(false);
 export const $preset = atom('default');
 export const $resetTrigger = atom(0);
 
+// Performance warning state
+export const $autoReduceParticles = atom(false);
+
+// Theme
+export type Theme = 'dark' | 'light';
+export const $theme = atom<Theme>(
+  (typeof localStorage !== 'undefined' && localStorage.getItem('theme') as Theme) || 'dark'
+);
+
+export function toggleTheme() {
+  const next = $theme.get() === 'dark' ? 'light' : 'dark';
+  $theme.set(next);
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+
 export function applyPreset(name: string) {
   const preset = PRESETS[name];
   if (preset) {

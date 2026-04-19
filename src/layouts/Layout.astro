@@ -15,28 +15,53 @@ const { title } = Astro.props;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <title>{title}</title>
+    <!-- Apply saved theme before paint to prevent flash -->
+    <script is:inline>
+      (function() {
+        var t = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      })();
+    </script>
   </head>
   <body>
     <header class="header">
       <div class="header-inner">
         <div class="logo">
-          <span class="logo-icon">✦</span>
+          <span class="logo-icon">&#10022;</span>
           <span class="logo-text">Particle Universe</span>
         </div>
-        <nav class="nav-badges">
-          <span class="framework-badge badge-vue">
-            <svg width="12" height="12" viewBox="0 0 256 221"><path fill="#41B883" d="M204.8 0H256L128 220.8L0 0h97.92L128 51.2L157.44 0z"/><path fill="#41B883" d="M0 0l128 220.8L256 0h-51.2L128 132.48L50.56 0z"/><path fill="#35495E" d="M50.56 0L128 133.12L204.8 0h-47.36L128 51.2L97.92 0z"/></svg>
-            Vue
-          </span>
-          <span class="framework-badge badge-react">
-            <svg width="12" height="12" viewBox="0 0 256 228"><circle cx="128" cy="114" r="20" fill="#61DAFB"/><ellipse cx="128" cy="114" rx="115" ry="44" fill="none" stroke="#61DAFB" stroke-width="8"/><ellipse cx="128" cy="114" rx="115" ry="44" fill="none" stroke="#61DAFB" stroke-width="8" transform="rotate(60 128 114)"/><ellipse cx="128" cy="114" rx="115" ry="44" fill="none" stroke="#61DAFB" stroke-width="8" transform="rotate(120 128 114)"/></svg>
-            React
-          </span>
-          <span class="framework-badge badge-angular">
-            <svg width="12" height="12" viewBox="0 0 256 272"><path fill="#DD0031" d="M.1 45.522L125.908.697l129.196 44.028l-20.919 166.45l-108.277 59.966l-106.583-59.169z"/><path fill="#C3002F" d="M255.104 44.725L125.908.697v270.444l108.277-59.866z"/><path fill="#FFF" d="M125.908 32.432L63.597 169.081l23.264.001l12.56-31.372h52.988l12.56 31.371h23.264zm.001 55.488l18.159 44.34h-36.318z"/></svg>
-            Angular
-          </span>
-        </nav>
+        <div class="header-right">
+          <nav class="nav-badges">
+            <span class="framework-badge badge-vue">
+              <svg width="12" height="12" viewBox="0 0 256 221"><path fill="#41B883" d="M204.8 0H256L128 220.8L0 0h97.92L128 51.2L157.44 0z"/><path fill="#35495E" d="M50.56 0L128 133.12L204.8 0h-47.36L128 51.2L97.92 0z"/></svg>
+              Vue
+            </span>
+            <span class="framework-badge badge-react">
+              <svg width="12" height="12" viewBox="0 0 256 228"><circle cx="128" cy="114" r="20" fill="#61DAFB"/><ellipse cx="128" cy="114" rx="115" ry="44" fill="none" stroke="#61DAFB" stroke-width="8"/><ellipse cx="128" cy="114" rx="115" ry="44" fill="none" stroke="#61DAFB" stroke-width="8" transform="rotate(60 128 114)"/><ellipse cx="128" cy="114" rx="115" ry="44" fill="none" stroke="#61DAFB" stroke-width="8" transform="rotate(120 128 114)"/></svg>
+              React
+            </span>
+            <span class="framework-badge badge-angular">
+              <svg width="12" height="12" viewBox="0 0 256 272"><path fill="#DD0031" d="M.1 45.522L125.908.697l129.196 44.028l-20.919 166.45l-108.277 59.966l-106.583-59.169z"/><path fill="#C3002F" d="M255.104 44.725L125.908.697v270.444l108.277-59.866z"/><path fill="#FFF" d="M125.908 32.432L63.597 169.081l23.264.001l12.56-31.372h52.988l12.56 31.371h23.264zm.001 55.488l18.159 44.34h-36.318z"/></svg>
+              Angular
+            </span>
+          </nav>
+          <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+            <svg id="theme-icon-sun" class="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+            <svg id="theme-icon-moon" class="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -44,15 +69,39 @@ const { title } = Astro.props;
       <slot />
     </main>
 
+    <script>
+      import { $theme, toggleTheme } from '../stores/store';
+
+      const btn = document.getElementById('theme-toggle')!;
+      const iconSun = document.getElementById('theme-icon-sun')!;
+      const iconMoon = document.getElementById('theme-icon-moon')!;
+
+      function updateIcons(theme: string) {
+        // In dark mode show sun (switch to light), in light mode show moon (switch to dark)
+        iconSun.style.display = theme === 'dark' ? 'block' : 'none';
+        iconMoon.style.display = theme === 'light' ? 'block' : 'none';
+      }
+
+      // Initialize
+      updateIcons($theme.get());
+      document.documentElement.setAttribute('data-theme', $theme.get());
+
+      btn.addEventListener('click', () => {
+        toggleTheme();
+        updateIcons($theme.get());
+      });
+    </script>
+
     <style>
       .header {
         position: sticky;
         top: 0;
         z-index: 50;
-        background: rgba(10, 10, 15, 0.85);
+        background: var(--header-bg);
         backdrop-filter: blur(12px);
         border-bottom: 1px solid var(--border-color);
         padding: 0.75rem 1.5rem;
+        transition: background 0.3s, border-color 0.3s;
       }
 
       .header-inner {
@@ -61,6 +110,12 @@ const { title } = Astro.props;
         display: flex;
         align-items: center;
         justify-content: space-between;
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
       }
 
       .logo {
@@ -89,6 +144,30 @@ const { title } = Astro.props;
         gap: 0.5rem;
       }
 
+      .theme-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--surface-overlay);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .theme-toggle:hover {
+        background: var(--surface-overlay-hover);
+        color: var(--text-primary);
+        border-color: var(--text-secondary);
+      }
+
+      .theme-icon {
+        display: none;
+      }
+
       .main-content {
         max-width: 1440px;
         margin: 0 auto;
@@ -101,8 +180,23 @@ const { title } = Astro.props;
       }
 
       @media (max-width: 768px) {
+        .header {
+          padding: 0.6rem 1rem;
+        }
+
         .nav-badges {
-          display: none;
+          gap: 0.3rem;
+        }
+
+        .nav-badges .framework-badge {
+          font-size: 0;
+          padding: 4px 6px;
+          margin-bottom: 0;
+        }
+
+        .nav-badges .framework-badge svg {
+          width: 14px;
+          height: 14px;
         }
       }
     </style>
