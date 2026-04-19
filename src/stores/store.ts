@@ -15,10 +15,7 @@ export interface ParticleConfig {
 export interface ParticleMetrics {
   fps: number;
   particleCount: number;
-  avgVelocity: number;
-  energy: number;
   fpsHistory: number[];
-  energyHistory: number[];
 }
 
 export const DEFAULT_CONFIG: ParticleConfig = {
@@ -106,10 +103,7 @@ export const $particleConfig = map<ParticleConfig>({ ...DEFAULT_CONFIG });
 export const $particleMetrics = map<ParticleMetrics>({
   fps: 0,
   particleCount: 0,
-  avgVelocity: 0,
-  energy: 0,
   fpsHistory: [],
-  energyHistory: [],
 });
 export const $isPaused = atom(false);
 export const $preset = atom('galaxy');

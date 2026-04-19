@@ -17,16 +17,12 @@
       <span class="stat-label">FPS</span>
     </div>
     <div class="stat-card">
+      <span class="stat-value" id="frame-time">0</span>
+      <span class="stat-label">Frame Time</span>
+    </div>
+    <div class="stat-card">
       <span class="stat-value" id="particle-count">0</span>
       <span class="stat-label">Particles</span>
-    </div>
-    <div class="stat-card">
-      <span class="stat-value" id="avg-velocity">0</span>
-      <span class="stat-label">Avg Velocity</span>
-    </div>
-    <div class="stat-card">
-      <span class="stat-value" id="energy-value">0</span>
-      <span class="stat-label">Energy</span>
     </div>
   </div>
 
@@ -35,9 +31,10 @@
     <canvas id="fps-chart" class="sparkline-canvas"></canvas>
   </div>
 
-  <div class="chart-section">
-    <span class="chart-title">Energy History</span>
-    <canvas id="energy-chart" class="sparkline-canvas"></canvas>
+  <div class="uptime-bar">
+    <span class="uptime-icon">&#9201;</span>
+    <span class="uptime-label">Uptime</span>
+    <span class="uptime-value" id="uptime-value">0:00</span>
   </div>
 
   <div class="status-bar">
@@ -47,7 +44,7 @@
 </div>
 
 <script>
-  import { $particleMetrics } from '../stores/store';
+  import { $particleMetrics, $isPaused, $resetTrigger } from '../stores/store';
 
   function drawSparkline(
     canvas: HTMLCanvasElement,
@@ -105,20 +102,20 @@
     ctx.stroke();
   }
 
-  function formatEnergy(energy: number): string {
-    if (energy > 10000) return (energy / 1000).toFixed(1) + 'k';
-    return energy.toString();
+  function formatUptime(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
   const fpsValue = document.getElementById('fps-value')!;
+  const frameTime = document.getElementById('frame-time')!;
   const particleCount = document.getElementById('particle-count')!;
-  const avgVelocity = document.getElementById('avg-velocity')!;
-  const energyValue = document.getElementById('energy-value')!;
   const fpsChart = document.getElementById('fps-chart') as HTMLCanvasElement;
-  const energyChart = document.getElementById('energy-chart') as HTMLCanvasElement;
   const statFps = document.getElementById('stat-fps')!;
   const statusDot = document.getElementById('status-dot')!;
   const statusText = document.getElementById('status-text')!;
+  const uptimeValue = document.getElementById('uptime-value')!;
 
   // Click FPS card to open performance popup
   statFps.addEventListener('click', () => {
@@ -127,11 +124,27 @@
     }
   });
 
+  // Uptime counter — counts while not paused, resets on particle reset
+  let uptimeSeconds = 0;
+  setInterval(() => {
+    if (!$isPaused.get()) {
+      uptimeSeconds++;
+      uptimeValue.textContent = formatUptime(uptimeSeconds);
+    }
+  }, 1000);
+
+  $resetTrigger.subscribe(() => {
+    uptimeSeconds = 0;
+    uptimeValue.textContent = formatUptime(0);
+  });
+
   $particleMetrics.subscribe((m) => {
     fpsValue.textContent = String(m.fps);
     particleCount.textContent = String(m.particleCount);
-    avgVelocity.textContent = String(m.avgVelocity);
-    energyValue.textContent = formatEnergy(m.energy);
+
+    // Frame time
+    const ft = m.fps > 0 ? (1000 / m.fps).toFixed(1) : '0';
+    frameTime.textContent = `${ft}ms`;
 
     // FPS color
     const fpsColor = m.fps >= 55 ? '#22c55e' : m.fps >= 30 ? '#f59e0b' : '#ef4444';
@@ -147,9 +160,8 @@
       m.fps >= 30 ? 'Performance degraded' :
       'Low performance — reduce particles';
 
-    // Sparklines
+    // Sparkline
     drawSparkline(fpsChart, m.fpsHistory, '#dd0031', 0, 80);
-    drawSparkline(energyChart, m.energyHistory, '#ff6f61');
   });
 </script>
 
@@ -229,6 +241,36 @@
     height: 40px;
     border-radius: 6px;
     background: var(--surface-subtle);
+  }
+
+  .uptime-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--surface-subtle);
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+  }
+
+  .uptime-icon {
+    font-size: 0.85rem;
+    opacity: 0.6;
+  }
+
+  .uptime-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+  }
+
+  .uptime-value {
+    margin-left: auto;
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    color: var(--text-primary);
   }
 
   .status-bar {

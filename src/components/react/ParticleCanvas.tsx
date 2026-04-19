@@ -199,9 +199,6 @@ export default function ParticleCanvas() {
         particles.pop();
       }
 
-      let totalVelocity = 0;
-      let totalEnergy = 0;
-
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
@@ -250,11 +247,8 @@ export default function ParticleCanvas() {
             ? (1 - lifeRatio) * 5
             : 1;
 
-        const vel = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-        totalVelocity += vel;
-        totalEnergy += 0.5 * vel * vel;
-
         // Draw particle
+        const vel = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
         const glow = Math.min(vel * 2, 15);
         ctx.shadowBlur = glow;
         ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
@@ -268,15 +262,11 @@ export default function ParticleCanvas() {
       // Update metrics in store
       const prev = $particleMetrics.get();
       const fpsHistory = [...prev.fpsHistory, fpsRef.current.current].slice(-60);
-      const energyHistory = [...prev.energyHistory, totalEnergy / Math.max(particles.length, 1)].slice(-60);
 
       $particleMetrics.set({
         fps: fpsRef.current.current,
         particleCount: particles.length,
-        avgVelocity: Math.round((totalVelocity / Math.max(particles.length, 1)) * 100) / 100,
-        energy: Math.round(totalEnergy),
         fpsHistory,
-        energyHistory,
       });
     };
 
