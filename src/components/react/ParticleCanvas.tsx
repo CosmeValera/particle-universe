@@ -58,6 +58,23 @@ function darkenRgb(r: number, g: number, b: number, factor: number): [number, nu
   ];
 }
 
+// HSL-based color from a 0–1 value for velocity/age coloring
+function valueToRgb(t: number): [number, number, number] {
+  // Blue (slow/young) → Cyan → Green → Yellow → Red (fast/old)
+  const hue = (1 - t) * 240; // 240=blue, 0=red
+  const s = 1, l = 0.55;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs((hue / 60) % 2 - 1));
+  const m = l - c / 2;
+  let rr = 0, gg = 0, bb = 0;
+  if (hue < 60) { rr = c; gg = x; }
+  else if (hue < 120) { rr = x; gg = c; }
+  else if (hue < 180) { gg = c; bb = x; }
+  else if (hue < 240) { gg = x; bb = c; }
+  else { rr = x; bb = c; }
+  return [Math.round((rr + m) * 255), Math.round((gg + m) * 255), Math.round((bb + m) * 255)];
+}
+
 function drawShape(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -201,7 +218,8 @@ export default function ParticleCanvas() {
 
       const particles = particlesRef.current;
       const rawRgb = hexToRgb(cfg.color);
-      const [r, g, b] = isLightMode() ? darkenRgb(...rawRgb, 0.55) : rawRgb;
+      const baseRgb = isLightMode() ? darkenRgb(...rawRgb, 0.55) : rawRgb;
+      const lightMode = isLightMode();
       const mouse = mouseRef.current;
 
       // Adjust particle count
@@ -239,11 +257,24 @@ export default function ParticleCanvas() {
         p.y += p.vy;
         p.life++;
 
-        // Wrap around edges
-        if (p.x < 0) p.x = canvas.width;
-        if (p.x > canvas.width) p.x = 0;
-        if (p.y < 0) p.y = canvas.height;
-        if (p.y > canvas.height) p.y = 0;
+        // Boundary handling
+        if (cfg.boundary === 'wrap') {
+          if (p.x < 0) p.x = canvas.width;
+          if (p.x > canvas.width) p.x = 0;
+          if (p.y < 0) p.y = canvas.height;
+          if (p.y > canvas.height) p.y = 0;
+        } else if (cfg.boundary === 'bounce') {
+          if (p.x < 0) { p.x = 0; p.vx *= -0.8; }
+          if (p.x > canvas.width) { p.x = canvas.width; p.vx *= -0.8; }
+          if (p.y < 0) { p.y = 0; p.vy *= -0.8; }
+          if (p.y > canvas.height) { p.y = canvas.height; p.vy *= -0.8; }
+        } else {
+          // 'none' — respawn if off screen
+          if (p.x < -10 || p.x > canvas.width + 10 || p.y < -10 || p.y > canvas.height + 10) {
+            particles[i] = createParticle(canvas.width, canvas.height, cfg);
+            continue;
+          }
+        }
 
         // Respawn dead particles
         if (p.life > p.maxLife) {
@@ -260,8 +291,19 @@ export default function ParticleCanvas() {
             ? (1 - lifeRatio) * 5
             : 1;
 
-        // Draw particle
+        // Determine particle color based on color mode
         const vel = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+        let r: number, g: number, b: number;
+        if (cfg.colorMode === 'velocity') {
+          const t = Math.min(vel / (cfg.speed * 3), 1);
+          [r, g, b] = lightMode ? darkenRgb(...valueToRgb(t), 0.7) : valueToRgb(t);
+        } else if (cfg.colorMode === 'age') {
+          [r, g, b] = lightMode ? darkenRgb(...valueToRgb(lifeRatio), 0.7) : valueToRgb(lifeRatio);
+        } else {
+          [r, g, b] = baseRgb;
+        }
+
+        // Draw particle
         const glow = Math.min(vel * 2, 15);
         ctx.shadowBlur = glow;
         ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.6)`;

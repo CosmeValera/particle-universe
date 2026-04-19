@@ -70,7 +70,10 @@ const { title } = Astro.props;
     </main>
 
     <script>
-      import { $theme, toggleTheme } from '../stores/store';
+      import { $theme, toggleTheme, loadConfigFromUrl } from '../stores/store';
+
+      // Load shared config from URL hash if present
+      loadConfigFromUrl();
 
       const btn = document.getElementById('theme-toggle')!;
       const iconSun = document.getElementById('theme-icon-sun')!;

@@ -1,5 +1,8 @@
 import { atom, map } from 'nanostores';
 
+export type ColorMode = 'solid' | 'velocity' | 'age';
+export type BoundaryMode = 'wrap' | 'bounce' | 'none';
+
 export interface ParticleConfig {
   gravity: number;
   speed: number;
@@ -10,6 +13,8 @@ export interface ParticleConfig {
   attraction: number;
   friction: number;
   trail: number;
+  colorMode: ColorMode;
+  boundary: BoundaryMode;
 }
 
 export interface ParticleMetrics {
@@ -28,6 +33,8 @@ export const DEFAULT_CONFIG: ParticleConfig = {
   attraction: 0.8,
   friction: 0.995,
   trail: 0.05,
+  colorMode: 'solid',
+  boundary: 'wrap',
 };
 
 export const PRESETS: Record<string, Partial<ParticleConfig>> = {
@@ -147,6 +154,8 @@ export function togglePause() {
 export function randomize() {
   const colors = ['#667eea', '#f59e0b', '#ec4899', '#22c55e', '#3b82f6', '#a78bfa', '#ef4444', '#14b8a6'];
   const shapes: ParticleConfig['shape'][] = ['circle', 'square', 'star', 'triangle'];
+  const colorModes: ColorMode[] = ['solid', 'velocity', 'age'];
+  const boundaries: BoundaryMode[] = ['wrap', 'bounce', 'none'];
 
   $particleConfig.set({
     gravity: Math.random() * 0.5,
@@ -158,6 +167,33 @@ export function randomize() {
     attraction: -1 + Math.random() * 2,
     friction: 0.95 + Math.random() * 0.05,
     trail: Math.random() * 0.5,
+    colorMode: colorModes[Math.floor(Math.random() * colorModes.length)],
+    boundary: boundaries[Math.floor(Math.random() * boundaries.length)],
   });
   $preset.set('custom');
+}
+
+// --- Share config via URL ---
+
+export function encodeConfigToUrl(): string {
+  const cfg = $particleConfig.get();
+  const preset = $preset.get();
+  const data = { ...cfg, preset };
+  const encoded = btoa(JSON.stringify(data));
+  return `${window.location.origin}${window.location.pathname}#config=${encoded}`;
+}
+
+export function loadConfigFromUrl(): boolean {
+  const hash = window.location.hash;
+  if (!hash.startsWith('#config=')) return false;
+  try {
+    const encoded = hash.slice('#config='.length);
+    const data = JSON.parse(atob(encoded));
+    const { preset, ...cfg } = data;
+    $particleConfig.set({ ...DEFAULT_CONFIG, ...cfg });
+    $preset.set(preset || 'custom');
+    return true;
+  } catch {
+    return false;
+  }
 }

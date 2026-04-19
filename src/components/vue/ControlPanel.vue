@@ -91,6 +91,44 @@
       </div>
     </div>
 
+    <!-- Color Mode -->
+    <div class="control-group">
+      <label class="control-label">
+        Color Mode
+        <span class="hint" title="How particles are colored. Solid uses the selected color. Velocity and Age create a rainbow gradient based on speed or lifetime">(?)</span>
+      </label>
+      <div class="shape-grid" style="grid-template-columns: repeat(3, 1fr)">
+        <button
+          v-for="m in colorModes"
+          :key="m.value"
+          class="preset-btn"
+          :class="{ active: config.colorMode === m.value }"
+          @click="updateConfig('colorMode', m.value)"
+        >
+          {{ m.label }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Boundary -->
+    <div class="control-group">
+      <label class="control-label">
+        Boundary
+        <span class="hint" title="What happens when particles reach the edge. Wrap teleports to the other side. Bounce reflects them. None lets them fly off and respawn">(?)</span>
+      </label>
+      <div class="shape-grid" style="grid-template-columns: repeat(3, 1fr)">
+        <button
+          v-for="b in boundaryModes"
+          :key="b.value"
+          class="preset-btn"
+          :class="{ active: config.boundary === b.value }"
+          @click="updateConfig('boundary', b.value)"
+        >
+          {{ b.label }}
+        </button>
+      </div>
+    </div>
+
     <!-- Action buttons -->
     <div class="action-row">
       <button class="action-btn" @click="handleTogglePause">
@@ -99,10 +137,19 @@
       <button class="action-btn" @click="handleReset">↺ Reset</button>
       <button class="action-btn accent" @click="handleRandomize">🎲 Random</button>
     </div>
+
+    <!-- Utility buttons -->
+    <div class="action-row utility-row">
+      <button class="action-btn" @click="handleScreenshot" title="Save canvas as PNG">📷 Screenshot</button>
+      <button class="action-btn" @click="handleShare" :class="{ copied: showCopied }">
+        {{ showCopied ? '✓ Copied!' : '🔗 Share' }}
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useStore } from '@nanostores/vue';
 import {
   $particleConfig,
@@ -113,6 +160,7 @@ import {
   resetParticles,
   togglePause,
   randomize,
+  encodeConfigToUrl,
 } from '../../stores/store';
 
 const config = useStore($particleConfig);
@@ -140,6 +188,20 @@ const shapes = [
   { value: 'triangle', icon: '▲' },
 ];
 
+const colorModes = [
+  { value: 'solid', label: 'Solid' },
+  { value: 'velocity', label: 'Velocity' },
+  { value: 'age', label: 'Age' },
+];
+
+const boundaryModes = [
+  { value: 'wrap', label: 'Wrap' },
+  { value: 'bounce', label: 'Bounce' },
+  { value: 'none', label: 'None' },
+];
+
+const showCopied = ref(false);
+
 function formatValue(val: number | string, decimals: number = 2): string {
   if (typeof val === 'string') return val;
   return val.toFixed(decimals);
@@ -149,7 +211,9 @@ function updateConfig(key: string, value: string) {
   const numericKeys = ['gravity', 'speed', 'count', 'size', 'attraction', 'friction', 'trail'];
   const newValue = numericKeys.includes(key) ? parseFloat(value) : value;
   $particleConfig.setKey(key as any, newValue as any);
-  $preset.set('custom');
+  if (!['colorMode', 'boundary'].includes(key)) {
+    $preset.set('custom');
+  }
 }
 
 function selectPreset(name: string) {
@@ -166,6 +230,24 @@ function handleReset() {
 
 function handleRandomize() {
   randomize();
+}
+
+function handleScreenshot() {
+  const canvas = document.querySelector('.canvas-wrapper canvas') as HTMLCanvasElement | null;
+  if (!canvas) return;
+  const link = document.createElement('a');
+  link.download = `particle-universe-${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function handleShare() {
+  const url = encodeConfigToUrl();
+  navigator.clipboard.writeText(url).then(() => {
+    window.history.replaceState(null, '', url.split(window.location.origin)[1]);
+    showCopied.value = true;
+    setTimeout(() => { showCopied.value = false; }, 2000);
+  });
 }
 </script>
 
@@ -362,5 +444,16 @@ function handleRandomize() {
 
 .action-btn.accent:hover {
   background: rgba(66, 184, 131, 0.2);
+}
+
+.utility-row {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.action-btn.copied {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.35);
+  color: #22c55e;
 }
 </style>
