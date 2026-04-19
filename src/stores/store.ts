@@ -118,6 +118,7 @@ export const $resetTrigger = atom(0);
 
 // Performance warning state
 export const $autoReduceParticles = atom(false);
+export const $forceLowFps = atom(false);
 
 // Theme
 export type Theme = 'dark' | 'light';

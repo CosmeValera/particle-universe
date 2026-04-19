@@ -37,6 +37,20 @@
     <span class="uptime-value" id="uptime-value">0:00</span>
   </div>
 
+  <div class="auto-reduce-bar">
+    <span class="auto-reduce-label">Auto-reduce</span>
+    <button id="auto-reduce-toggle" class="auto-reduce-toggle" aria-label="Toggle auto-reduce particles" title="Gradually reduces particles when FPS drops below 45">
+      <span class="auto-reduce-knob"></span>
+    </button>
+  </div>
+
+  <div class="force-low-fps-bar">
+    <span class="force-low-fps-label">Force low FPS</span>
+    <button id="force-low-fps-toggle" class="auto-reduce-toggle" aria-label="Toggle force low FPS" title="Experimental: caps reported FPS to 15 for testing">
+      <span class="auto-reduce-knob"></span>
+    </button>
+  </div>
+
   <div class="status-bar">
     <div class="status-dot" id="status-dot"></div>
     <span class="status-text" id="status-text">Initializing...</span>
@@ -44,7 +58,7 @@
 </div>
 
 <script>
-  import { $particleMetrics, $isPaused, $resetTrigger } from '../stores/store';
+  import { $particleMetrics, $isPaused, $resetTrigger, $autoReduceParticles, $forceLowFps } from '../stores/store';
 
   function drawSparkline(
     canvas: HTMLCanvasElement,
@@ -124,6 +138,38 @@
     }
   });
 
+  // Auto-reduce toggle
+  const autoReduceToggle = document.getElementById('auto-reduce-toggle')!;
+
+  function syncAutoReduceUI() {
+    autoReduceToggle.classList.toggle('active', $autoReduceParticles.get());
+  }
+
+  syncAutoReduceUI();
+
+  autoReduceToggle.addEventListener('click', () => {
+    $autoReduceParticles.set(!$autoReduceParticles.get());
+    syncAutoReduceUI();
+  });
+
+  $autoReduceParticles.subscribe(() => {
+    syncAutoReduceUI();
+  });
+
+  // Force low FPS toggle
+  const forceLowFpsToggle = document.getElementById('force-low-fps-toggle')!;
+
+  function syncForceLowFpsUI() {
+    forceLowFpsToggle.classList.toggle('active', $forceLowFps.get());
+  }
+
+  syncForceLowFpsUI();
+
+  forceLowFpsToggle.addEventListener('click', () => {
+    $forceLowFps.set(!$forceLowFps.get());
+    syncForceLowFpsUI();
+  });
+
   // Uptime counter — counts while not paused, resets on particle reset
   let uptimeSeconds = 0;
   setInterval(() => {
@@ -155,10 +201,14 @@
 
     // Status
     statusDot.style.background = fpsColor;
-    statusText.textContent =
-      m.fps >= 55 ? 'System running optimally' :
-      m.fps >= 30 ? 'Performance degraded' :
-      'Low performance — reduce particles';
+    const autoReduce = $autoReduceParticles.get();
+    if (m.fps >= 55) {
+      statusText.textContent = autoReduce ? 'Running optimally — auto-reduce on' : 'System running optimally';
+    } else if (m.fps >= 30) {
+      statusText.textContent = autoReduce ? 'Auto-reducing particles...' : 'Performance degraded';
+    } else {
+      statusText.textContent = autoReduce ? 'Auto-reducing particles...' : 'Low performance — enable auto-reduce';
+    }
 
     // Sparkline
     drawSparkline(fpsChart, m.fpsHistory, '#dd0031', 0, 80);
@@ -271,6 +321,71 @@
     font-weight: 700;
     font-family: 'Courier New', monospace;
     color: var(--text-primary);
+  }
+
+  .auto-reduce-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: var(--surface-subtle);
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+  }
+
+  .auto-reduce-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+  }
+
+  .force-low-fps-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px dashed rgba(239, 68, 68, 0.25);
+    border-radius: 8px;
+  }
+
+  .force-low-fps-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #f87171;
+  }
+
+  .auto-reduce-toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    border: none;
+    background: var(--border-color);
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s;
+  }
+
+  .auto-reduce-toggle.active {
+    background: #22c55e;
+  }
+
+  .auto-reduce-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: white;
+    transition: transform 0.2s;
+  }
+
+  .auto-reduce-toggle.active .auto-reduce-knob {
+    transform: translateX(16px);
   }
 
   .status-bar {

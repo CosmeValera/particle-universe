@@ -5,6 +5,7 @@ import {
   $particleMetrics,
   $isPaused,
   $resetTrigger,
+  $forceLowFps,
   togglePause,
   randomize,
   type ParticleConfig,
@@ -316,12 +317,12 @@ export default function ParticleCanvas() {
 
       // Update metrics in store
       const prev = $particleMetrics.get();
-      const fpsHistory = [...prev.fpsHistory, fpsRef.current.current].slice(-60);
+      const reportedFps = $forceLowFps.get() ? Math.min(fpsRef.current.current, 15) : fpsRef.current.current;
 
       $particleMetrics.set({
-        fps: fpsRef.current.current,
+        fps: reportedFps,
         particleCount: particles.length,
-        fpsHistory,
+        fpsHistory: [...prev.fpsHistory, reportedFps].slice(-60),
       });
     };
 
