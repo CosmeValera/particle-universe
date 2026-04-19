@@ -89,6 +89,17 @@ export const PRESETS: Record<string, Partial<ParticleConfig>> = {
     friction: 0.998,
     trail: 0.02,
   },
+  snowfall: {
+    gravity: 0.08,
+    speed: 1,
+    count: 350,
+    size: 3,
+    color: '#e0e0ff',
+    shape: 'circle',
+    attraction: 0.15,
+    friction: 0.992,
+    trail: 0.12,
+  },
 };
 
 export const $particleConfig = map<ParticleConfig>({ ...DEFAULT_CONFIG });

@@ -1,24 +1,24 @@
 ---
 ---
 
-<!-- Floating pill — visible whenever FPS is low -->
+<!-- Floating pill — always shows current FPS once triggered -->
 <button id="perf-pill" class="perf-pill" hidden>
-  <span class="perf-pill-dot"></span>
-  <span class="perf-pill-text">Low FPS: <strong id="perf-pill-fps">0</strong></span>
+  <span id="perf-pill-dot" class="perf-pill-dot"></span>
+  <span id="perf-pill-label" class="perf-pill-text">FPS: <strong id="perf-pill-fps">0</strong></span>
 </button>
 
 <!-- Full popup overlay -->
 <div id="perf-warning" class="perf-overlay" hidden>
   <div class="perf-popup">
     <div class="perf-header">
-      <span class="perf-icon">&#9888;</span>
-      <span class="perf-title">Low Performance Detected</span>
+      <span id="perf-icon" class="perf-icon">&#9888;</span>
+      <span id="perf-title" class="perf-title">Performance</span>
       <button id="perf-close" class="perf-close" aria-label="Close">&times;</button>
     </div>
-    <p class="perf-desc">
-      The simulation is running at <strong id="perf-popup-fps">0</strong> FPS. This may cause lag or high CPU usage.
+    <p id="perf-desc" class="perf-desc">
+      The simulation is running at <strong id="perf-popup-fps">0</strong> FPS.
     </p>
-    <div class="perf-actions">
+    <div id="perf-actions" class="perf-actions">
       <button id="perf-pause" class="perf-btn perf-btn-primary">
         Pause Simulation
       </button>
@@ -43,8 +43,13 @@
 
   const pill = document.getElementById('perf-pill')!;
   const pillFps = document.getElementById('perf-pill-fps')!;
+  const pillDot = document.getElementById('perf-pill-dot')!;
+  const pillLabel = document.getElementById('perf-pill-label')!;
   const overlay = document.getElementById('perf-warning')!;
   const popupFps = document.getElementById('perf-popup-fps')!;
+  const popupIcon = document.getElementById('perf-icon')!;
+  const popupTitle = document.getElementById('perf-title')!;
+  const popupDesc = document.getElementById('perf-desc')!;
   const btnPause = document.getElementById('perf-pause')!;
   const btnAutoReduce = document.getElementById('perf-auto-reduce')!;
   const btnSnooze = document.getElementById('perf-snooze')!;
@@ -62,6 +67,73 @@
   let autoPopupShown = false;
   let pillVisible = false;
 
+  // FPS tier: 'good' >= 55, 'ok' >= 30, 'bad' < 30
+  type FpsTier = 'good' | 'ok' | 'bad';
+
+  function getFpsTier(fps: number): FpsTier {
+    if (fps >= 55) return 'good';
+    if (fps >= 30) return 'ok';
+    return 'bad';
+  }
+
+  const tierColors: Record<FpsTier, string> = {
+    good: '#22c55e',
+    ok: '#f59e0b',
+    bad: '#ef4444',
+  };
+
+  const tierBorders: Record<FpsTier, string> = {
+    good: 'rgba(34, 197, 94, 0.35)',
+    ok: 'rgba(245, 158, 11, 0.35)',
+    bad: 'rgba(239, 68, 68, 0.35)',
+  };
+
+  const tierBordersHover: Record<FpsTier, string> = {
+    good: 'rgba(34, 197, 94, 0.6)',
+    ok: 'rgba(245, 158, 11, 0.6)',
+    bad: 'rgba(239, 68, 68, 0.6)',
+  };
+
+  function updatePillStyle(fps: number) {
+    const tier = getFpsTier(fps);
+    const color = tierColors[tier];
+    pill.style.borderColor = tierBorders[tier];
+    pill.style.color = color;
+    pillDot.style.background = color;
+    pillFps.textContent = String(fps);
+  }
+
+  function updatePopupContent(fps: number) {
+    const tier = getFpsTier(fps);
+    popupFps.textContent = String(fps);
+
+    if (tier === 'good') {
+      popupIcon.textContent = '\u2714'; // checkmark
+      popupIcon.style.color = '#22c55e';
+      popupTitle.textContent = 'Performance is Good';
+      popupDesc.innerHTML = `The simulation is running at <strong>${fps}</strong> FPS. Everything looks smooth.`;
+      btnPause.style.display = 'none';
+      btnAutoReduce.textContent = 'Enable Auto-reduce (preventive)';
+      btnSnooze.style.display = 'none';
+    } else if (tier === 'ok') {
+      popupIcon.textContent = '\u26A0'; // warning
+      popupIcon.style.color = '#f59e0b';
+      popupTitle.textContent = 'Performance Could Be Better';
+      popupDesc.innerHTML = `The simulation is running at <strong>${fps}</strong> FPS. It may feel slightly choppy.`;
+      btnPause.style.display = '';
+      btnAutoReduce.textContent = 'Auto-reduce Particles';
+      btnSnooze.style.display = '';
+    } else {
+      popupIcon.textContent = '\u26A0'; // warning
+      popupIcon.style.color = '#ef4444';
+      popupTitle.textContent = 'Low Performance Detected';
+      popupDesc.innerHTML = `The simulation is running at <strong>${fps}</strong> FPS. This may cause lag or high CPU usage.`;
+      btnPause.style.display = '';
+      btnAutoReduce.textContent = 'Auto-reduce Particles';
+      btnSnooze.style.display = '';
+    }
+  }
+
   function showPill() {
     if (pillVisible) return;
     pillVisible = true;
@@ -71,7 +143,7 @@
 
   function showPopup() {
     popupOpen = true;
-    popupFps.textContent = String(lastSeenFps);
+    updatePopupContent(lastSeenFps);
     overlay.hidden = false;
     requestAnimationFrame(() => overlay.classList.add('visible'));
   }
@@ -85,14 +157,24 @@
 
   // Clicking the pill opens the popup
   pill.addEventListener('click', () => {
+    updatePopupContent(lastSeenFps);
     showPopup();
+  });
+
+  // Hover style adapts to current tier
+  pill.addEventListener('mouseenter', () => {
+    const tier = getFpsTier(lastSeenFps);
+    pill.style.borderColor = tierBordersHover[tier];
+  });
+  pill.addEventListener('mouseleave', () => {
+    const tier = getFpsTier(lastSeenFps);
+    pill.style.borderColor = tierBorders[tier];
   });
 
   // --- Popup button handlers ---
 
   btnPause.addEventListener('click', () => {
     if (!$isPaused.get()) togglePause();
-    // Re-enable auto-popup so it triggers again after the user resumes
     autoPopupShown = false;
     lowFpsCount = 0;
     hidePopup();
@@ -133,13 +215,14 @@
       return;
     }
 
-    // Always keep the pill FPS in sync with the metrics panel
+    // Always keep the pill in sync
     if (pillVisible) {
-      pillFps.textContent = String(m.fps);
+      updatePillStyle(m.fps);
     }
 
     // Show the floating pill on first low FPS — it stays forever after that
     if (isLow && !$isPaused.get()) {
+      updatePillStyle(m.fps);
       showPill();
     }
 
@@ -179,7 +262,7 @@
     color: #fbbf24;
     opacity: 0;
     transform: translateY(8px);
-    transition: opacity 0.2s, transform 0.2s, border-color 0.2s, background 0.2s;
+    transition: opacity 0.2s, transform 0.2s, border-color 0.3s, background 0.2s, color 0.3s;
   }
 
   .perf-pill.visible {
@@ -189,7 +272,6 @@
 
   .perf-pill:hover {
     background: var(--bg-panel-hover);
-    border-color: rgba(245, 158, 11, 0.6);
   }
 
   .perf-pill-dot {
@@ -197,6 +279,7 @@
     height: 8px;
     border-radius: 50%;
     background: #f59e0b;
+    transition: background 0.3s;
     animation: pill-pulse 1.5s ease-in-out infinite;
   }
 
@@ -205,8 +288,8 @@
   }
 
   @keyframes pill-pulse {
-    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
-    50% { opacity: 0.6; box-shadow: 0 0 8px 2px rgba(245, 158, 11, 0.2); }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
   }
 
   /* --- Popup overlay --- */
@@ -272,6 +355,7 @@
   .perf-icon {
     font-size: 1.3rem;
     color: #f59e0b;
+    transition: color 0.3s;
   }
 
   .perf-title {

@@ -126,7 +126,7 @@ export default function ParticleCanvas() {
   }, [isPaused, metrics.fps]);
 
   const lastFps = isPaused ? lastRealFpsRef.current : metrics.fps;
-  const wasLowFps = lastFps > 0 && lastFps < 30;
+  const wasLowFps = lastFps > 0 && lastFps < 45;
 
   const initParticles = useCallback(() => {
     const canvas = canvasRef.current;
@@ -312,14 +312,17 @@ export default function ParticleCanvas() {
   const handleReduceParticles = () => {
     const current = $particleConfig.get().count;
     $particleConfig.setKey('count', Math.max(50, Math.round(current * 0.5)));
+    if ($isPaused.get()) togglePause();
   };
 
   const handleLowerGravity = () => {
     $particleConfig.setKey('gravity', 0.02);
+    if ($isPaused.get()) togglePause();
   };
 
   const handleTryRandom = () => {
     randomize();
+    if ($isPaused.get()) togglePause();
   };
 
   return (
@@ -365,15 +368,27 @@ export default function ParticleCanvas() {
           </div>
 
           {wasLowFps && (
-            <div
-              style={{
-                fontSize: '0.78rem',
-                color: '#f59e0b',
-                fontFamily: "'Courier New', monospace",
-                fontWeight: 600,
-              }}
-            >
-              Last FPS: {lastFps}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem' }}>
+              <div
+                style={{
+                  fontSize: '0.78rem',
+                  color: '#f59e0b',
+                  fontFamily: "'Courier New', monospace",
+                  fontWeight: 600,
+                }}
+              >
+                Last FPS: {lastFps}
+              </div>
+              <div
+                style={{
+                  fontSize: '0.7rem',
+                  color: 'var(--text-secondary)',
+                  opacity: 0.8,
+                  fontStyle: 'italic',
+                }}
+              >
+                Tip: try reducing the number of particles
+              </div>
             </div>
           )}
 
