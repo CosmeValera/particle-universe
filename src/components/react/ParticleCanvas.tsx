@@ -315,11 +315,6 @@ export default function ParticleCanvas() {
     if ($isPaused.get()) togglePause();
   };
 
-  const handleLowerGravity = () => {
-    $particleConfig.setKey('gravity', 0.02);
-    if ($isPaused.get()) togglePause();
-  };
-
   const handleTryRandom = () => {
     randomize();
     if ($isPaused.get()) togglePause();
@@ -457,20 +452,6 @@ export default function ParticleCanvas() {
                   }}
                 >
                   Halve Particles
-                </button>
-                <button
-                  onClick={handleLowerGravity}
-                  style={quickBtnStyle}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'var(--surface-overlay-hover)';
-                    e.currentTarget.style.color = 'var(--text-primary)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'var(--surface-overlay)';
-                    e.currentTarget.style.color = 'var(--text-secondary)';
-                  }}
-                >
-                  Lower Gravity
                 </button>
                 <button
                   onClick={handleTryRandom}

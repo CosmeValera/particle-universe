@@ -1,12 +1,6 @@
 ---
 ---
 
-<!-- Floating pill — always shows current FPS once triggered -->
-<button id="perf-pill" class="perf-pill" hidden>
-  <span id="perf-pill-dot" class="perf-pill-dot"></span>
-  <span id="perf-pill-label" class="perf-pill-text">FPS: <strong id="perf-pill-fps">0</strong></span>
-</button>
-
 <!-- Full popup overlay -->
 <div id="perf-warning" class="perf-overlay" hidden>
   <div class="perf-popup">
@@ -41,10 +35,6 @@
     togglePause,
   } from '../stores/store';
 
-  const pill = document.getElementById('perf-pill')!;
-  const pillFps = document.getElementById('perf-pill-fps')!;
-  const pillDot = document.getElementById('perf-pill-dot')!;
-  const pillLabel = document.getElementById('perf-pill-label')!;
   const overlay = document.getElementById('perf-warning')!;
   const popupFps = document.getElementById('perf-popup-fps')!;
   const popupIcon = document.getElementById('perf-icon')!;
@@ -65,62 +55,25 @@
   let popupOpen = false;
   let snoozedUntil = 0;
   let autoPopupShown = false;
-  let pillVisible = false;
-
-  // FPS tier: 'good' >= 55, 'ok' >= 30, 'bad' < 30
-  type FpsTier = 'good' | 'ok' | 'bad';
-
-  function getFpsTier(fps: number): FpsTier {
-    if (fps >= 55) return 'good';
-    if (fps >= 30) return 'ok';
-    return 'bad';
-  }
-
-  const tierColors: Record<FpsTier, string> = {
-    good: '#22c55e',
-    ok: '#f59e0b',
-    bad: '#ef4444',
-  };
-
-  const tierBorders: Record<FpsTier, string> = {
-    good: 'rgba(34, 197, 94, 0.35)',
-    ok: 'rgba(245, 158, 11, 0.35)',
-    bad: 'rgba(239, 68, 68, 0.35)',
-  };
-
-  const tierBordersHover: Record<FpsTier, string> = {
-    good: 'rgba(34, 197, 94, 0.6)',
-    ok: 'rgba(245, 158, 11, 0.6)',
-    bad: 'rgba(239, 68, 68, 0.6)',
-  };
-
-  function updatePillStyle(fps: number) {
-    const tier = getFpsTier(fps);
-    const color = tierColors[tier];
-    pill.style.borderColor = tierBorders[tier];
-    pill.style.color = color;
-    pillDot.style.background = color;
-    pillFps.textContent = String(fps);
-  }
 
   function updatePopupContent(fps: number) {
-    const tier = getFpsTier(fps);
     popupFps.textContent = String(fps);
 
-    if (tier === 'good') {
+    if (fps >= 55) {
       popupIcon.textContent = '\u2714'; // checkmark
       popupIcon.style.color = '#22c55e';
       popupTitle.textContent = 'Performance is Good';
       popupDesc.innerHTML = `The simulation is running at <strong>${fps}</strong> FPS. Everything looks smooth.`;
       btnPause.style.display = 'none';
-      btnAutoReduce.textContent = 'Enable Auto-reduce (preventive)';
+      btnAutoReduce.style.display = 'none';
       btnSnooze.style.display = 'none';
-    } else if (tier === 'ok') {
+    } else if (fps >= 30) {
       popupIcon.textContent = '\u26A0'; // warning
       popupIcon.style.color = '#f59e0b';
       popupTitle.textContent = 'Performance Could Be Better';
       popupDesc.innerHTML = `The simulation is running at <strong>${fps}</strong> FPS. It may feel slightly choppy.`;
       btnPause.style.display = '';
+      btnAutoReduce.style.display = '';
       btnAutoReduce.textContent = 'Auto-reduce Particles';
       btnSnooze.style.display = '';
     } else {
@@ -129,16 +82,10 @@
       popupTitle.textContent = 'Low Performance Detected';
       popupDesc.innerHTML = `The simulation is running at <strong>${fps}</strong> FPS. This may cause lag or high CPU usage.`;
       btnPause.style.display = '';
+      btnAutoReduce.style.display = '';
       btnAutoReduce.textContent = 'Auto-reduce Particles';
       btnSnooze.style.display = '';
     }
-  }
-
-  function showPill() {
-    if (pillVisible) return;
-    pillVisible = true;
-    pill.hidden = false;
-    requestAnimationFrame(() => pill.classList.add('visible'));
   }
 
   function showPopup() {
@@ -155,21 +102,11 @@
     setTimeout(() => { overlay.hidden = true; }, 200);
   }
 
-  // Clicking the pill opens the popup
-  pill.addEventListener('click', () => {
-    updatePopupContent(lastSeenFps);
+  // Expose globally so MetricsPanel can open it
+  (window as any).__showPerfPopup = () => {
+    lastSeenFps = $particleMetrics.get().fps;
     showPopup();
-  });
-
-  // Hover style adapts to current tier
-  pill.addEventListener('mouseenter', () => {
-    const tier = getFpsTier(lastSeenFps);
-    pill.style.borderColor = tierBordersHover[tier];
-  });
-  pill.addEventListener('mouseleave', () => {
-    const tier = getFpsTier(lastSeenFps);
-    pill.style.borderColor = tierBorders[tier];
-  });
+  };
 
   // --- Popup button handlers ---
 
@@ -215,17 +152,6 @@
       return;
     }
 
-    // Always keep the pill in sync
-    if (pillVisible) {
-      updatePillStyle(m.fps);
-    }
-
-    // Show the floating pill on first low FPS — it stays forever after that
-    if (isLow && !$isPaused.get()) {
-      updatePillStyle(m.fps);
-      showPill();
-    }
-
     // Auto-open popup once after sustained low FPS
     if (popupOpen || $isPaused.get() || snoozed) return;
 
@@ -242,56 +168,6 @@
 </script>
 
 <style>
-  /* --- Floating pill --- */
-  .perf-pill {
-    position: fixed;
-    bottom: 1.25rem;
-    right: 1.25rem;
-    z-index: 999;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
-    background: var(--bg-panel);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(245, 158, 11, 0.35);
-    border-radius: 100px;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 0.75rem;
-    color: #fbbf24;
-    opacity: 0;
-    transform: translateY(8px);
-    transition: opacity 0.2s, transform 0.2s, border-color 0.3s, background 0.2s, color 0.3s;
-  }
-
-  .perf-pill.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .perf-pill:hover {
-    background: var(--bg-panel-hover);
-  }
-
-  .perf-pill-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #f59e0b;
-    transition: background 0.3s;
-    animation: pill-pulse 1.5s ease-in-out infinite;
-  }
-
-  .perf-pill-text {
-    letter-spacing: 0.02em;
-  }
-
-  @keyframes pill-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-  }
-
   /* --- Popup overlay --- */
   .perf-overlay {
     position: fixed;

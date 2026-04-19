@@ -12,7 +12,7 @@
   </div>
 
   <div class="stats-grid">
-    <div class="stat-card" id="stat-fps">
+    <div class="stat-card stat-card-clickable" id="stat-fps" title="Click for performance details">
       <span class="stat-value" id="fps-value">0</span>
       <span class="stat-label">FPS</span>
     </div>
@@ -120,6 +120,13 @@
   const statusDot = document.getElementById('status-dot')!;
   const statusText = document.getElementById('status-text')!;
 
+  // Click FPS card to open performance popup
+  statFps.addEventListener('click', () => {
+    if ((window as any).__showPerfPopup) {
+      (window as any).__showPerfPopup();
+    }
+  });
+
   $particleMetrics.subscribe((m) => {
     fpsValue.textContent = String(m.fps);
     particleCount.textContent = String(m.particleCount);
@@ -172,9 +179,22 @@
     transition: all 0.3s;
   }
 
+  .stat-card-clickable {
+    cursor: pointer;
+  }
+
+  .stat-card-clickable:hover {
+    background: var(--surface-overlay-hover);
+    border-color: var(--border-color);
+  }
+
   .stat-card.highlight {
     border-color: rgba(34, 197, 94, 0.3);
     background: rgba(34, 197, 94, 0.05);
+  }
+
+  .stat-card.highlight.stat-card-clickable:hover {
+    background: rgba(34, 197, 94, 0.1);
   }
 
   .stat-value {
