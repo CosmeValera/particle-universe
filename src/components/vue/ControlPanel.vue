@@ -148,6 +148,25 @@
       </div>
     </div>
 
+    <!-- Bounciness (only visible when boundary is bounce) -->
+    <div class="control-group" v-if="config.boundary === 'bounce'">
+      <label class="control-label">
+        <span class="label-with-hint">
+          Bounciness
+          <span class="hint" title="How much energy is preserved on each wall bounce. At 1.0 particles bounce perfectly, below 1.0 they lose energy each bounce">(?)</span>
+        </span>
+        <span class="control-value">{{ formatValue(config.bounciness, 2) }}</span>
+      </label>
+      <input
+        type="range"
+        min="0.5"
+        max="2"
+        step="0.05"
+        :value="config.bounciness"
+        @input="updateConfig('bounciness', ($event.target as HTMLInputElement).value)"
+      />
+    </div>
+
     <!-- Collision -->
     <div class="control-group">
       <label class="control-label">
@@ -170,6 +189,32 @@
           @click="updateConfig('collision', 'true')"
         >
           On
+        </button>
+      </div>
+    </div>
+
+    <!-- Particle Lifespan -->
+    <div class="control-group">
+      <label class="control-label">
+        <span class="label-with-hint">
+          Lifespan
+          <span class="hint" title="Mortal particles fade in and out, then respawn. Immortal particles live forever">(?)</span>
+        </span>
+      </label>
+      <div class="shape-grid" style="grid-template-columns: repeat(2, 1fr)">
+        <button
+          class="preset-btn"
+          :class="{ active: !config.immortal }"
+          @click="updateConfig('immortal', 'false')"
+        >
+          Mortal
+        </button>
+        <button
+          class="preset-btn"
+          :class="{ active: config.immortal }"
+          @click="updateConfig('immortal', 'true')"
+        >
+          Immortal
         </button>
       </div>
     </div>
@@ -260,14 +305,14 @@ function formatValue(val: number | string, decimals: number = 2): string {
 }
 
 function updateConfig(key: string, value: string) {
-  const numericKeys = ['gravity', 'speed', 'count', 'size', 'attraction', 'friction', 'trail'];
-  const booleanKeys = ['collision'];
+  const numericKeys = ['gravity', 'speed', 'count', 'size', 'attraction', 'friction', 'trail', 'bounciness'];
+  const booleanKeys = ['collision', 'immortal'];
   let newValue: any;
   if (numericKeys.includes(key)) newValue = parseFloat(value);
   else if (booleanKeys.includes(key)) newValue = value === 'true';
   else newValue = value;
   $particleConfig.setKey(key as any, newValue);
-  if (!['colorMode', 'boundary', 'gravityDirection', 'collision'].includes(key)) {
+  if (!['colorMode', 'boundary', 'gravityDirection', 'collision', 'immortal'].includes(key)) {
     $preset.set('custom');
   }
 }

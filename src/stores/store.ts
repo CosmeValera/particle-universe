@@ -18,6 +18,8 @@ export interface ParticleConfig {
   colorMode: ColorMode;
   boundary: BoundaryMode;
   collision: boolean;
+  immortal: boolean;
+  bounciness: number;
 }
 
 export interface ParticleMetrics {
@@ -40,6 +42,8 @@ export const DEFAULT_CONFIG: ParticleConfig = {
   colorMode: 'solid',
   boundary: 'wrap',
   collision: false,
+  immortal: false,
+  bounciness: 0.8,
 };
 
 export const PRESETS: Record<string, Partial<ParticleConfig>> = {
@@ -178,6 +182,8 @@ export function randomize() {
     colorMode: colorModes[Math.floor(Math.random() * colorModes.length)],
     boundary: boundaries[Math.floor(Math.random() * boundaries.length)],
     collision: Math.random() > 0.5,
+    immortal: Math.random() > 0.5,
+    bounciness: 0.5 + Math.random() * 0.5,
   });
   $preset.set('custom');
 }

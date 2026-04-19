@@ -270,10 +270,11 @@ export default function ParticleCanvas() {
           if (p.y < 0) p.y = canvas.height;
           if (p.y > canvas.height) p.y = 0;
         } else if (cfg.boundary === 'bounce') {
-          if (p.x < 0) { p.x = 0; p.vx *= -0.8; }
-          if (p.x > canvas.width) { p.x = canvas.width; p.vx *= -0.8; }
-          if (p.y < 0) { p.y = 0; p.vy *= -0.8; }
-          if (p.y > canvas.height) { p.y = canvas.height; p.vy *= -0.8; }
+          const b = -cfg.bounciness;
+          if (p.x < 0) { p.x = 0; p.vx *= b; }
+          if (p.x > canvas.width) { p.x = canvas.width; p.vx *= b; }
+          if (p.y < 0) { p.y = 0; p.vy *= b; }
+          if (p.y > canvas.height) { p.y = canvas.height; p.vy *= b; }
         } else {
           // 'none' — respawn if off screen
           if (p.x < -10 || p.x > canvas.width + 10 || p.y < -10 || p.y > canvas.height + 10) {
@@ -282,20 +283,22 @@ export default function ParticleCanvas() {
           }
         }
 
-        // Respawn dead particles
-        if (p.life > p.maxLife) {
+        // Respawn dead particles (skip if immortal)
+        if (!cfg.immortal && p.life > p.maxLife) {
           const newP = createParticle(canvas.width, canvas.height, cfg);
           particles[i] = newP;
           continue;
         }
 
         // Calculate opacity based on life
-        const lifeRatio = p.life / p.maxLife;
-        const opacity = lifeRatio < 0.1
-          ? lifeRatio * 10
-          : lifeRatio > 0.8
-            ? (1 - lifeRatio) * 5
-            : 1;
+        const lifeRatio = cfg.immortal ? 0.5 : p.life / p.maxLife;
+        const opacity = cfg.immortal
+          ? 1
+          : lifeRatio < 0.1
+            ? lifeRatio * 10
+            : lifeRatio > 0.8
+              ? (1 - lifeRatio) * 5
+              : 1;
 
         // Determine particle color based on color mode
         const vel = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
