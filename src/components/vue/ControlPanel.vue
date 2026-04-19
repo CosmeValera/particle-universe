@@ -258,6 +258,7 @@ function handleShare() {
   gap: 0.85rem;
   height: 100%;
   overflow-y: auto;
+  padding-right: 6px;
 }
 
 .control-group {
