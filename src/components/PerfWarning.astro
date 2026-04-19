@@ -12,18 +12,7 @@
     <p id="perf-desc" class="perf-desc">
       The simulation is running at <strong id="perf-popup-fps">0</strong> FPS.
     </p>
-    <div id="perf-actions" class="perf-actions">
-      <button id="perf-pause" class="perf-btn perf-btn-primary">
-        Pause Simulation
-      </button>
-      <button id="perf-dismiss" class="perf-btn perf-btn-ghost">
-        Don't show again
-      </button>
-    </div>
-
-    <div class="perf-divider"></div>
-
-    <!-- Auto-reduce toggle -->
+    <!-- Primary: auto-reduce toggle -->
     <div class="perf-toggle-section">
       <div class="perf-toggle-row">
         <span class="perf-toggle-label">Auto-reduce particles</span>
@@ -34,6 +23,16 @@
       <p class="perf-toggle-desc">
         Gradually reduces the particle count when FPS drops below 45, until performance stabilizes. You can turn this off at any time.
       </p>
+    </div>
+
+    <!-- Secondary actions -->
+    <div id="perf-actions" class="perf-actions-row">
+      <button id="perf-pause" class="perf-btn perf-btn-secondary-sm">
+        Pause Simulation
+      </button>
+      <button id="perf-dismiss" class="perf-btn perf-btn-ghost-sm">
+        Don't show again
+      </button>
     </div>
   </div>
 </div>
@@ -56,6 +55,7 @@
   const btnDismiss = document.getElementById('perf-dismiss')!;
   const btnClose = document.getElementById('perf-close')!;
   const autoToggle = document.getElementById('perf-auto-toggle')!;
+  const actionsRow = document.getElementById('perf-actions')!;
 
   const LOW_FPS_THRESHOLD = 30;
   const AUTO_REDUCE_FPS_THRESHOLD = 45;
@@ -81,22 +81,19 @@
       popupIcon.style.color = '#22c55e';
       popupTitle.textContent = 'Performance is Good';
       popupDesc.innerHTML = `The simulation is running at <strong>${fps}</strong> FPS. Everything looks smooth.`;
-      btnPause.style.display = 'none';
-      btnDismiss.style.display = 'none';
+      actionsRow.style.display = 'none';
     } else if (fps >= 30) {
       popupIcon.textContent = '\u26A0'; // warning
       popupIcon.style.color = '#f59e0b';
       popupTitle.textContent = 'Performance Could Be Better';
       popupDesc.innerHTML = `The simulation is running at <strong>${fps}</strong> FPS. It may feel slightly choppy.`;
-      btnPause.style.display = '';
-      btnDismiss.style.display = '';
+      actionsRow.style.display = '';
     } else {
       popupIcon.textContent = '\u26A0'; // warning
       popupIcon.style.color = '#ef4444';
       popupTitle.textContent = 'Low Performance Detected';
       popupDesc.innerHTML = `The simulation is running at <strong>${fps}</strong> FPS. This may cause lag or high CPU usage.`;
-      btnPause.style.display = '';
-      btnDismiss.style.display = '';
+      actionsRow.style.display = '';
     }
   }
 
@@ -135,13 +132,18 @@
   });
 
   autoToggle.addEventListener('click', () => {
-    const next = !$autoReduceParticles.get();
-    $autoReduceParticles.set(next);
+    const wasOff = !$autoReduceParticles.get();
+    $autoReduceParticles.set(wasOff);
     syncToggleUI();
+    if (wasOff) hidePopup();
   });
 
   btnClose.addEventListener('click', () => {
     hidePopup();
+  });
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) hidePopup();
   });
 
   // --- Monitor FPS ---
@@ -257,50 +259,7 @@
     margin: 0 0 1.25rem;
   }
 
-  .perf-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .perf-btn {
-    padding: 10px 14px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.15s;
-    border: 1px solid transparent;
-    font-family: inherit;
-  }
-
-  .perf-btn-primary {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.35);
-    color: #f87171;
-  }
-  .perf-btn-primary:hover {
-    background: rgba(239, 68, 68, 0.25);
-  }
-
-  .perf-btn-ghost {
-    background: var(--surface-overlay);
-    border-color: var(--border-color);
-    color: var(--text-secondary);
-  }
-  .perf-btn-ghost:hover {
-    background: var(--surface-overlay-hover);
-    color: var(--text-primary);
-  }
-
-  /* --- Divider --- */
-  .perf-divider {
-    height: 1px;
-    background: var(--border-color);
-    margin: 1rem 0;
-  }
-
-  /* --- Auto-reduce toggle section --- */
+  /* --- Auto-reduce toggle section (primary) --- */
   .perf-toggle-section {
     display: flex;
     flex-direction: column;
@@ -355,5 +314,44 @@
     color: var(--text-secondary);
     line-height: 1.5;
     margin: 0;
+  }
+
+  /* --- Secondary actions row --- */
+  .perf-actions-row {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 1rem;
+  }
+
+  .perf-btn {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 0.68rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    font-family: inherit;
+    text-align: center;
+  }
+
+  .perf-btn-secondary-sm {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.25);
+    color: #f87171;
+  }
+  .perf-btn-secondary-sm:hover {
+    background: rgba(239, 68, 68, 0.2);
+  }
+
+  .perf-btn-ghost-sm {
+    background: var(--surface-overlay);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+  }
+  .perf-btn-ghost-sm:hover {
+    background: var(--surface-overlay-hover);
+    color: var(--text-primary);
   }
 </style>
