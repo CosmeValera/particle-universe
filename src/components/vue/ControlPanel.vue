@@ -265,7 +265,7 @@ const sliders = [
   { key: 'count' as const, label: 'Particles', min: 10, max: 800, step: 10, decimals: 0, hint: 'Total number of particles on screen. More particles look better but can lower FPS' },
   { key: 'size' as const, label: 'Size', min: 1, max: 8, step: 0.5, decimals: 1, hint: 'How large each particle is drawn on screen' },
   { key: 'attraction' as const, label: 'Attraction', min: -1, max: 1, step: 0.05, decimals: 2, hint: 'How particles react to your mouse. Positive values attract, negative values repel' },
-  { key: 'friction' as const, label: 'Friction', min: 0.9, max: 1, step: 0.002, decimals: 3, hint: 'How quickly particles slow down. Values near 1 mean less friction, so particles glide longer' },
+  { key: 'friction' as const, label: 'Glide', min: 0.9, max: 1, step: 0.002, decimals: 3, hint: 'How far particles glide before slowing down. Higher values mean less drag, so particles keep their speed longer' },
   { key: 'trail' as const, label: 'Trail', min: 0, max: 0.5, step: 0.01, decimals: 2, hint: 'How much of the previous frame remains visible. Higher values create longer trails behind particles' },
 ];
 
