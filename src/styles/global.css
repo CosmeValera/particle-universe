@@ -29,6 +29,11 @@
   /* Glow */
   --canvas-glow-inset: rgba(100, 100, 255, 0.05);
   --canvas-glow-outer: rgba(100, 100, 255, 0.03);
+
+  /* Subtle element opacities */
+  --opacity-hint: 0.5;
+  --opacity-subtle: 0.6;
+  --opacity-pulse-min: 0.5;
 }
 
 [data-theme="light"] {
@@ -38,21 +43,41 @@
   --bg-panel-hover: #f5f5fa;
   --border-color: #cccde0;
   --text-primary: #1a1a2e;
-  --text-secondary: #5a5a78;
+  --text-secondary: #4a4a65;
   --accent-glow: rgba(100, 100, 255, 0.08);
 
   --canvas-bg-rgb: 240, 241, 245;
 
-  --surface-overlay: rgba(0, 0, 0, 0.04);
-  --surface-overlay-hover: rgba(0, 0, 0, 0.08);
-  --surface-subtle: rgba(0, 0, 0, 0.025);
-  --surface-border: rgba(0, 0, 0, 0.08);
+  --surface-overlay: rgba(0, 0, 0, 0.05);
+  --surface-overlay-hover: rgba(0, 0, 0, 0.1);
+  --surface-subtle: rgba(0, 0, 0, 0.04);
+  --surface-border: rgba(0, 0, 0, 0.12);
   --header-bg: rgba(255, 255, 255, 0.85);
 
   --slider-thumb-shadow: rgba(66, 184, 131, 0.25);
 
   --canvas-glow-inset: rgba(100, 100, 255, 0.04);
   --canvas-glow-outer: rgba(100, 100, 255, 0.02);
+
+  --opacity-hint: 0.75;
+  --opacity-subtle: 0.85;
+  --opacity-pulse-min: 0.65;
+}
+
+/* Strengthen badge borders & backgrounds in light mode */
+[data-theme="light"] .badge-vue {
+  background: rgba(66, 184, 131, 0.15);
+  border-color: rgba(66, 184, 131, 0.4);
+}
+
+[data-theme="light"] .badge-react {
+  background: rgba(97, 218, 251, 0.15);
+  border-color: rgba(97, 218, 251, 0.4);
+}
+
+[data-theme="light"] .badge-angular {
+  background: rgba(221, 0, 49, 0.12);
+  border-color: rgba(221, 0, 49, 0.35);
 }
 
 * {

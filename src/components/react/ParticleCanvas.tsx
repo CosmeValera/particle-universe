@@ -381,7 +381,6 @@ export default function ParticleCanvas() {
                 style={{
                   fontSize: '0.7rem',
                   color: 'var(--text-secondary)',
-                  opacity: 0.8,
                   fontStyle: 'italic',
                 }}
               >
@@ -435,7 +434,6 @@ export default function ParticleCanvas() {
                 style={{
                   fontSize: '0.75rem',
                   color: 'var(--text-secondary)',
-                  opacity: 0.7,
                   margin: 0,
                 }}
               >

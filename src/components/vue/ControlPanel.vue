@@ -204,7 +204,7 @@ function handleRandomize() {
 .hint {
   font-size: 0.6rem;
   color: var(--text-secondary);
-  opacity: 0.5;
+  opacity: var(--opacity-hint);
   cursor: help;
   font-weight: 400;
   text-transform: none;
