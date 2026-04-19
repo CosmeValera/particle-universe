@@ -234,8 +234,13 @@ export default function ParticleCanvas() {
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
-        // Gravity
-        p.vy += cfg.gravity;
+        // Gravity (directional)
+        switch (cfg.gravityDirection) {
+          case 'down':  p.vy += cfg.gravity; break;
+          case 'up':    p.vy -= cfg.gravity; break;
+          case 'left':  p.vx -= cfg.gravity; break;
+          case 'right': p.vx += cfg.gravity; break;
+        }
 
         // Mouse attraction/repulsion
         if (mouse.active) {
@@ -311,6 +316,53 @@ export default function ParticleCanvas() {
         ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity * 0.85})`;
 
         drawShape(ctx, p.x, p.y, p.size * cfg.size * 0.5, cfg.shape);
+      }
+
+      // Particle collisions (grid-based spatial hash for performance)
+      if (cfg.collision) {
+        const cellSize = cfg.size * 4;
+        const grid = new Map<string, number[]>();
+        for (let i = 0; i < particles.length; i++) {
+          const cx = Math.floor(particles[i].x / cellSize);
+          const cy = Math.floor(particles[i].y / cellSize);
+          const key = `${cx},${cy}`;
+          const cell = grid.get(key);
+          if (cell) cell.push(i);
+          else grid.set(key, [i]);
+        }
+        for (const indices of grid.values()) {
+          for (let a = 0; a < indices.length; a++) {
+            for (let b = a + 1; b < indices.length; b++) {
+              const p1 = particles[indices[a]];
+              const p2 = particles[indices[b]];
+              const dx = p2.x - p1.x;
+              const dy = p2.y - p1.y;
+              const distSq = dx * dx + dy * dy;
+              const minDist = (p1.size + p2.size) * cfg.size * 0.5;
+              if (distSq < minDist * minDist && distSq > 0.01) {
+                const dist = Math.sqrt(distSq);
+                const nx = dx / dist;
+                const ny = dy / dist;
+                // Swap velocity components along collision normal
+                const relVx = p1.vx - p2.vx;
+                const relVy = p1.vy - p2.vy;
+                const dot = relVx * nx + relVy * ny;
+                if (dot > 0) {
+                  p1.vx -= dot * nx * 0.5;
+                  p1.vy -= dot * ny * 0.5;
+                  p2.vx += dot * nx * 0.5;
+                  p2.vy += dot * ny * 0.5;
+                  // Separate overlapping particles
+                  const overlap = (minDist - dist) * 0.5;
+                  p1.x -= overlap * nx;
+                  p1.y -= overlap * ny;
+                  p2.x += overlap * nx;
+                  p2.y += overlap * ny;
+                }
+              }
+            }
+          }
+        }
       }
 
       ctx.shadowBlur = 0;

@@ -46,6 +46,25 @@
       />
     </div>
 
+    <!-- Gravity Direction -->
+    <div class="control-group">
+      <label class="control-label">
+        Gravity Direction
+        <span class="hint" title="The direction gravity pulls particles">(?)</span>
+      </label>
+      <div class="shape-grid">
+        <button
+          v-for="d in gravityDirections"
+          :key="d.value"
+          class="preset-btn"
+          :class="{ active: config.gravityDirection === d.value }"
+          @click="updateConfig('gravityDirection', d.value)"
+        >
+          {{ d.icon }}
+        </button>
+      </div>
+    </div>
+
     <!-- Color -->
     <div class="control-group">
       <label class="control-label">
@@ -129,6 +148,32 @@
       </div>
     </div>
 
+    <!-- Collision -->
+    <div class="control-group">
+      <label class="control-label">
+        <span class="label-with-hint">
+          Collision
+          <span class="hint" title="When enabled, particles bounce off each other">(?)</span>
+        </span>
+      </label>
+      <div class="shape-grid" style="grid-template-columns: repeat(2, 1fr)">
+        <button
+          class="preset-btn"
+          :class="{ active: !config.collision }"
+          @click="updateConfig('collision', 'false')"
+        >
+          Off
+        </button>
+        <button
+          class="preset-btn"
+          :class="{ active: config.collision }"
+          @click="updateConfig('collision', 'true')"
+        >
+          On
+        </button>
+      </div>
+    </div>
+
     <!-- Action buttons -->
     <div class="action-row">
       <button class="action-btn" @click="handleTogglePause">
@@ -200,6 +245,13 @@ const boundaryModes = [
   { value: 'none', label: 'None' },
 ];
 
+const gravityDirections = [
+  { value: 'down', icon: '↓' },
+  { value: 'up', icon: '↑' },
+  { value: 'left', icon: '←' },
+  { value: 'right', icon: '→' },
+];
+
 const showCopied = ref(false);
 
 function formatValue(val: number | string, decimals: number = 2): string {
@@ -209,9 +261,13 @@ function formatValue(val: number | string, decimals: number = 2): string {
 
 function updateConfig(key: string, value: string) {
   const numericKeys = ['gravity', 'speed', 'count', 'size', 'attraction', 'friction', 'trail'];
-  const newValue = numericKeys.includes(key) ? parseFloat(value) : value;
-  $particleConfig.setKey(key as any, newValue as any);
-  if (!['colorMode', 'boundary'].includes(key)) {
+  const booleanKeys = ['collision'];
+  let newValue: any;
+  if (numericKeys.includes(key)) newValue = parseFloat(value);
+  else if (booleanKeys.includes(key)) newValue = value === 'true';
+  else newValue = value;
+  $particleConfig.setKey(key as any, newValue);
+  if (!['colorMode', 'boundary', 'gravityDirection', 'collision'].includes(key)) {
     $preset.set('custom');
   }
 }

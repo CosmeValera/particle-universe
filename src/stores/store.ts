@@ -2,9 +2,11 @@ import { atom, map } from 'nanostores';
 
 export type ColorMode = 'solid' | 'velocity' | 'age';
 export type BoundaryMode = 'wrap' | 'bounce' | 'none';
+export type GravityDirection = 'down' | 'up' | 'left' | 'right';
 
 export interface ParticleConfig {
   gravity: number;
+  gravityDirection: GravityDirection;
   speed: number;
   count: number;
   size: number;
@@ -15,6 +17,7 @@ export interface ParticleConfig {
   trail: number;
   colorMode: ColorMode;
   boundary: BoundaryMode;
+  collision: boolean;
 }
 
 export interface ParticleMetrics {
@@ -25,6 +28,7 @@ export interface ParticleMetrics {
 
 export const DEFAULT_CONFIG: ParticleConfig = {
   gravity: 0.02,
+  gravityDirection: 'down',
   speed: 1.5,
   count: 500,
   size: 2,
@@ -35,6 +39,7 @@ export const DEFAULT_CONFIG: ParticleConfig = {
   trail: 0.05,
   colorMode: 'solid',
   boundary: 'wrap',
+  collision: false,
 };
 
 export const PRESETS: Record<string, Partial<ParticleConfig>> = {
@@ -157,9 +162,11 @@ export function randomize() {
   const shapes: ParticleConfig['shape'][] = ['circle', 'square', 'star', 'triangle'];
   const colorModes: ColorMode[] = ['solid', 'velocity', 'age'];
   const boundaries: BoundaryMode[] = ['wrap', 'bounce', 'none'];
+  const gravityDirs: GravityDirection[] = ['down', 'up', 'left', 'right'];
 
   $particleConfig.set({
     gravity: Math.random() * 0.5,
+    gravityDirection: gravityDirs[Math.floor(Math.random() * gravityDirs.length)],
     speed: 0.5 + Math.random() * 5,
     count: 100 + Math.floor(Math.random() * 500),
     size: 1 + Math.random() * 6,
@@ -170,6 +177,7 @@ export function randomize() {
     trail: Math.random() * 0.5,
     colorMode: colorModes[Math.floor(Math.random() * colorModes.length)],
     boundary: boundaries[Math.floor(Math.random() * boundaries.length)],
+    collision: Math.random() > 0.5,
   });
   $preset.set('custom');
 }
