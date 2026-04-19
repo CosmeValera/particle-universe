@@ -22,15 +22,15 @@ export interface ParticleMetrics {
 }
 
 export const DEFAULT_CONFIG: ParticleConfig = {
-  gravity: 0.1,
-  speed: 2,
-  count: 300,
-  size: 3,
-  color: '#667eea',
+  gravity: 0.02,
+  speed: 1.5,
+  count: 500,
+  size: 2,
+  color: '#a78bfa',
   shape: 'circle',
-  attraction: 0.5,
-  friction: 0.99,
-  trail: 0.15,
+  attraction: 0.8,
+  friction: 0.995,
+  trail: 0.05,
 };
 
 export const PRESETS: Record<string, Partial<ParticleConfig>> = {
@@ -63,7 +63,7 @@ export const PRESETS: Record<string, Partial<ParticleConfig>> = {
     size: 2,
     color: '#3b82f6',
     shape: 'circle',
-    attraction: 0,
+    attraction: 0.7,
     friction: 0.98,
     trail: 0.3,
   },
@@ -101,7 +101,7 @@ export const $particleMetrics = map<ParticleMetrics>({
   energyHistory: [],
 });
 export const $isPaused = atom(false);
-export const $preset = atom('default');
+export const $preset = atom('galaxy');
 export const $resetTrigger = atom(0);
 
 // Performance warning state

@@ -133,9 +133,13 @@
       return;
     }
 
+    // Always keep the pill FPS in sync with the metrics panel
+    if (pillVisible) {
+      pillFps.textContent = String(m.fps);
+    }
+
     // Show the floating pill on first low FPS — it stays forever after that
     if (isLow && !$isPaused.get()) {
-      pillFps.textContent = String(m.fps);
       showPill();
     }
 

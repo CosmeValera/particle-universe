@@ -10,7 +10,10 @@
 
     <!-- Presets -->
     <div class="control-group">
-      <label class="control-label">Preset</label>
+      <label class="control-label">
+        Preset
+        <span class="hint" title="Pre-configured particle settings you can switch between">(?)</span>
+      </label>
       <div class="preset-grid">
         <button
           v-for="name in presetNames"
@@ -27,7 +30,10 @@
     <!-- Sliders -->
     <div class="control-group" v-for="slider in sliders" :key="slider.key">
       <label class="control-label">
-        {{ slider.label }}
+        <span class="label-with-hint">
+          {{ slider.label }}
+          <span class="hint" :title="slider.hint">(?)</span>
+        </span>
         <span class="control-value">{{ formatValue(config[slider.key], slider.decimals) }}</span>
       </label>
       <input
@@ -42,7 +48,10 @@
 
     <!-- Color -->
     <div class="control-group">
-      <label class="control-label">Color</label>
+      <label class="control-label">
+        Color
+        <span class="hint" title="The color of the particles. Pick from swatches or use the color picker">(?)</span>
+      </label>
       <div class="color-row">
         <input
           type="color"
@@ -65,7 +74,10 @@
 
     <!-- Shape -->
     <div class="control-group">
-      <label class="control-label">Shape</label>
+      <label class="control-label">
+        Shape
+        <span class="hint" title="The shape each particle is rendered as">(?)</span>
+      </label>
       <div class="shape-grid">
         <button
           v-for="s in shapes"
@@ -101,23 +113,22 @@ import {
   resetParticles,
   togglePause,
   randomize,
-  DEFAULT_CONFIG,
 } from '../../stores/store';
 
 const config = useStore($particleConfig);
 const paused = useStore($isPaused);
 const currentPreset = useStore($preset);
 
-const presetNames = ['default', ...Object.keys(PRESETS)];
+const presetNames = Object.keys(PRESETS);
 
 const sliders = [
-  { key: 'gravity' as const, label: 'Gravity', min: 0, max: 1, step: 0.01, decimals: 2 },
-  { key: 'speed' as const, label: 'Speed', min: 0.1, max: 8, step: 0.1, decimals: 1 },
-  { key: 'count' as const, label: 'Particles', min: 10, max: 800, step: 10, decimals: 0 },
-  { key: 'size' as const, label: 'Size', min: 1, max: 8, step: 0.5, decimals: 1 },
-  { key: 'attraction' as const, label: 'Attraction', min: -1, max: 1, step: 0.05, decimals: 2 },
-  { key: 'friction' as const, label: 'Friction', min: 0.9, max: 1, step: 0.002, decimals: 3 },
-  { key: 'trail' as const, label: 'Trail', min: 0, max: 0.5, step: 0.01, decimals: 2 },
+  { key: 'gravity' as const, label: 'Gravity', min: 0, max: 1, step: 0.01, decimals: 2, hint: 'How strongly particles are pulled downward. Higher values make them fall faster' },
+  { key: 'speed' as const, label: 'Speed', min: 0.1, max: 8, step: 0.1, decimals: 1, hint: 'Initial velocity of particles when they spawn. Higher values make them move faster' },
+  { key: 'count' as const, label: 'Particles', min: 10, max: 800, step: 10, decimals: 0, hint: 'Total number of particles on screen. More particles look better but can lower FPS' },
+  { key: 'size' as const, label: 'Size', min: 1, max: 8, step: 0.5, decimals: 1, hint: 'How large each particle is drawn on screen' },
+  { key: 'attraction' as const, label: 'Attraction', min: -1, max: 1, step: 0.05, decimals: 2, hint: 'How particles react to your mouse. Positive values attract, negative values repel' },
+  { key: 'friction' as const, label: 'Friction', min: 0.9, max: 1, step: 0.002, decimals: 3, hint: 'How quickly particles slow down. Values near 1 mean less friction, so particles glide longer' },
+  { key: 'trail' as const, label: 'Trail', min: 0, max: 0.5, step: 0.01, decimals: 2, hint: 'How much of the previous frame remains visible. Higher values create longer trails behind particles' },
 ];
 
 const colors = ['#667eea', '#a78bfa', '#ec4899', '#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#14b8a6'];
@@ -142,12 +153,7 @@ function updateConfig(key: string, value: string) {
 }
 
 function selectPreset(name: string) {
-  if (name === 'default') {
-    $particleConfig.set({ ...DEFAULT_CONFIG });
-    $preset.set('default');
-  } else {
-    applyPreset(name);
-  }
+  applyPreset(name);
 }
 
 function handleTogglePause() {
@@ -184,8 +190,32 @@ function handleRandomize() {
   color: var(--text-secondary);
   display: flex;
   justify-content: space-between;
+  align-items: center;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.label-with-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hint {
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  cursor: help;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  position: relative;
+  transition: opacity 0.15s;
+}
+
+.hint:hover {
+  opacity: 1;
+  color: var(--accent-vue);
 }
 
 .control-value {
